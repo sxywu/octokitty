@@ -1,5 +1,5 @@
 require.config({
-    baseUrl: "scripts/contrib/",
+    baseUrl: "assets/",
     paths: {
         "app": "..",
         "underscore": "underscore",
@@ -36,7 +36,7 @@ require([
     "backbone",
     "d3",
     "mediator",
-    "app/views/App.View"
+    "views/App.View"
 ], function(
     $,
     _,
@@ -46,5 +46,4 @@ require([
     AppView
 ) {
     app = {};
-
 });
