@@ -46,4 +46,6 @@ require([
     AppView
 ) {
     app = {};
+
+    var appView = new AppView();
 });
