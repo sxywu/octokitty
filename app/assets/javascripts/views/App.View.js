@@ -11,13 +11,6 @@ define([
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
-			// var after = _.after(1, _.bind(this.render, this));
-			// this.getEndpoint(
-			// 	'commit',
-			// 	'https://api.github.com/repos/enjalot/checkin/commits?author=sxywu&per_page=100',
-			// 	this.parseCommits,
-			// 	after
-			// );
 			this.repos = [];
 			this.contributors = [];
 			this.getData('enjalot');
@@ -100,7 +93,6 @@ define([
 							name = 'repo:' +  repo.name;
 							that.saveToStorage(name, data);
 
-							// get contributors that have contributed more than 5 commits
 							var contributors = _.chain(data)
 								.filter(function(contributor) {
 									return contributor.author !== repo.owner && contributor.contributions > 5;
@@ -112,20 +104,21 @@ define([
 									return contributor.author;
 								}).value();
 							if (contributors.length) {
+								contributors.push(repo.owner)
 								that.repos.push({
-									repo: repo.name,
+									name: repo.name,
 									owner: repo.owner,
 									contributors: contributors
 								})
 							}
 							allReposLoaded();
 						};
+
 						if (localStorage[name]) {
 							callback(that.getFromStorage(name));
 						} else {
 							that.hitEndpoint(url, that.parseContributors, callback);
 						}
-
 					});
 				};
 			if (localStorage[name]) {
@@ -136,6 +129,43 @@ define([
 		},
 		getCommits: function() {
 			if (this.repos) {
+				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
+					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
+					name,
+					url,
+					callback,
+					that = this;
+
+				this.contributors = {};
+				_.each(this.repos, function(repo) {
+					_.each(repo.contributors, function(contributor) {
+						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+						url = 'https://api.github.com/repos/' + repo.owner + '/' + repo.name + '/commits?author=' + contributor + '&per_page=100';
+						callback = function(data) {
+							name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+							_.each(data, function(commit) {
+								commit.owner = repo.owner;
+								commit.repo = repo.name;
+							});
+							that.saveToStorage(name, data);
+
+							if (that.contributors[contributor]) {
+								that.contributors[contributor].push(data);
+							} else {
+								that.contributors[contributor] = data;
+							}
+
+							allCommitsLoaded();
+						};
+
+						if (localStorage[name]) {
+							callback(that.getFromStorage(name));
+						} else {
+							that.hitEndpoint(url, that.parseCommits, callback);
+						}
+
+					});
+				});
 
 			} else {
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
