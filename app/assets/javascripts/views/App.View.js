@@ -195,7 +195,8 @@ define([
 			_.each(this.contributors, function(commits, contributor) {
 				commits = _.chain(commits)
 					.flatten().sortBy(function(commit) {
-						return new Date(commit.date);
+						commit.dateObj = new Date(commit.date);
+						return commit.dateObj;
 					}).value()
 				that.contributors[contributor] = commits;
 			});
