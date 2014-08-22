@@ -71,24 +71,29 @@ define([
 			var that = this,
 				name = 'user:' + user,
 				url = 'https://api.github.com/users/' + user + '/repos?per_page=100',
+				numRepos = 5,
+				numContributors = 5,
 				callback = function(data) {
 					// save it first
 					that.saveToStorage(name, data);
 
 					// after all repos are loaded, and the contributors are calculated for this user
 					// go and get the information of everyone in the contributors array
-					var allReposLoaded = _.after(Math.min(data.length, 5), function() {
+					var allReposLoaded = _.after(Math.min(data.length, numRepos), function() {
 						if (!end) {
-							var nextUser = that.contributors.shift();
-							debugger
-							that.getData(nextUser);
+							var allUsersLoaded = _.after(that.contributors.length, _.bind(that.getCommits, that));
+							_.each(that.contributors, function(contributor) {
+								that.getData(contributor, allUsersLoaded);
+							})
+						} else {
+							end();
 						}
 					});
 					// sort the repos by "popularity", and then query the endpoint to see
 					// if there are any contributors.  If there are, add the repo to the repos array
 					_.chain(data).sortBy(function(repo) {
 						return -(repo.watches + repo.stars + repo.forks);
-					}).first(5).each(function(repo) {
+					}).first(numRepos).each(function(repo) {
 						name = 'repo:' +  repo.name;
 						url = 'https://api.github.com/repos/' + repo.owner + '/' + repo.name + '/contributors?per_page=100';
 						callback = function(data) {
@@ -99,9 +104,9 @@ define([
 							var contributors = _.chain(data)
 								.filter(function(contributor) {
 									return contributor.author !== repo.owner && contributor.contributions > 5;
-								}).first(5).map(function(contributor) {
-									if (!_.contains(that.contributors, contributor.author)) {
-										// make sure contributor isn't only in the array
+								}).first(numContributors).map(function(contributor) {
+									if (!end && !_.contains(that.contributors, contributor.author)) {
+										// make sure contributor isn't already in the array
 										that.contributors.push(contributor.author);
 									}
 									return contributor.author;
@@ -127,6 +132,13 @@ define([
 				callback(this.getFromStorage(name));
 			} else {
 				this.hitEndpoint(url, this.parseRepos, callback);
+			}
+		},
+		getCommits: function() {
+			if (this.repos) {
+
+			} else {
+				// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			}
 		},
 		saveToStorage: function(name, data) {
