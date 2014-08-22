@@ -60,6 +60,10 @@ define([
 				url: commit.url
 			}
 		},
+		/** get user's repo data, as well as the repo's contributor data
+		recurse one level, so we also get the contributors' repos and their contributor data
+		after we get all the repo and contributor data, call getCommits.
+		*/
 		getData: function(user, end) {
 			var that = this,
 				name = 'user:' + user,
@@ -127,6 +131,10 @@ define([
 				this.hitEndpoint(url, this.parseRepos, callback);
 			}
 		},
+		/**
+		for each of the contributors in a repo, get only their commits to that repo.
+		once we have all the data, call render.
+		*/
 		getCommits: function() {
 			if (this.repos) {
 				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
@@ -171,6 +179,10 @@ define([
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			}
 		},
+		/**
+		note(swu): the data is currently being stored to localStorage, but
+		we should consider how we may want to save to db
+		*/
 		saveToStorage: function(name, data) {
 			localStorage[name] = JSON.stringify(data);
 		},
@@ -178,6 +190,16 @@ define([
 			return $.parseJSON(localStorage[name]);
 		},
 		render: function() {
+			var that = this;
+			// first, flatten the contributors' commit array, then sort them by date
+			_.each(this.contributors, function(commits, contributor) {
+				commits = _.chain(commits)
+					.flatten().sortBy(function(commit) {
+						return new Date(commit.date);
+					}).value()
+				that.contributors[contributor] = commits;
+			});
+
 			debugger
 		}
 	});
