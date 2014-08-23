@@ -2,17 +2,22 @@ define([
 	"jquery",
 	"underscore",
 	"backbone",
-	"d3"
+	"d3",
+	"visualizations/Line.Visualization"
 ], function(
 	$,
 	_,
 	Backbone,
-	d3
+	d3,
+	LineVisualization
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
 			this.repos = [];
 			this.contributors = [];
+
+			this.svg = d3.select('svg');
+
 			this.getData('enjalot');
 		},
 		hitEndpoint: function(url, parse, callback, data) {
@@ -202,6 +207,14 @@ define([
 			});
 
 			this.calculatePositions();
+
+			this.svg.selectAll('path')
+				.data(_.values(this.contributors))
+				.enter().append('path')
+				.each(function() {
+					var lineVisualization = new LineVisualization();
+					d3.select(this).call(lineVisualization);
+				})
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
@@ -232,9 +245,8 @@ define([
 					_.each(reposByContributor, function(repo) {
 						repos.push(repo.owner + '/' + repo.name);
 					});
-				} else {
-					repos.push(contributor);
 				}
+				repos.push(contributor);
 			});
 			repos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
 			var range = _.chain(repos.length).range().map(function(i) {return i * app.contributorPadding}).value(),
@@ -244,6 +256,7 @@ define([
 			// this is what we've been leading up to ladies and gents
 			_.each(this.contributors, function(commits, contributor) {
 				_.each(commits, function(commit) {
+					commit.authorX = repoScale(commit.author);
 					commit.x = repoScale(commit.owner + '/' + commit.repo);
 					commit.y = timeScale(commit.dateObj);
 				})
