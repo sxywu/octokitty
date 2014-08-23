@@ -7,6 +7,17 @@ svg {
 	height: 6000px;
 }
 
+.backgrounds {
+	height: 2000px;
+	position: fixed;
+	z-index: -1;
+}
+
+.background {
+
+}
+
+/*svg*/
 .contributor {
 	fill: none;
 	stroke-width: 2;

@@ -200,12 +200,16 @@ define([
 			this.formatData();
 			this.calculatePositions();
 
+			this.renderBackground();
+
+			// contributor lines
 			var lineVisualization = new LineVisualization();
 			this.svg.selectAll('path')
 				.data(_.values(this.contributors))
 				.enter().append('path')
 				.call(lineVisualization);
 
+			// commit circles
 			var circleVisualization = new CircleVisualization(),
 				commits = _.chain(this.contributors).values()
 					.flatten().value();
@@ -213,6 +217,8 @@ define([
 				.data(commits)
 				.enter().append('circle')
 				.call(circleVisualization);
+
+
 		},
 		formatData: function() {
 			var that = this,
@@ -275,9 +281,9 @@ define([
 				}
 				repos.push(contributor);
 			});
-			repos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
+			repos = this.sortedRepos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
 			var range = _.chain(repos.length).range().map(function(i) {return (i + 1) * app.contributorPadding}).value(),
-				repoScale = d3.scale.ordinal().domain(repos).range(range);
+				repoScale = this.repoScale = d3.scale.ordinal().domain(repos).range(range);
 			
 			// finally, a scale for the size of each circle
 			var allTimes = _.chain(this.contributors)
@@ -297,6 +303,32 @@ define([
 					commit.y = timeScale(commit.dateObj);
 					commit.radius = commitScale(commit.times.length);
 				})
+			});
+		},
+		// draw the background here bc i'm too lazy to put it in another file
+		renderBackground: function() {
+			var that = this,
+				backgrounds = {},
+				owner,
+				background;
+			_.each(this.sortedRepos, function(repo) {
+				owner = repo.split('/')[0];
+				if (!backgrounds[owner]) {
+					background = that.svg.append('rect')
+						.classed('background', true)
+						.attr('x', that.repoScale(owner) - app.contributorPadding / 2)
+						.attr('y', 0)
+						.attr('width', app.contributorPadding)
+						.attr('height', $('svg').height() + 500)
+						.attr('stroke', app.d3Colors(owner))
+						.attr('stroke-opacity', .2)
+						.attr('fill', app.d3Colors(owner))
+						.attr('fill-opacity', .02);
+					backgrounds[owner] = background
+				} else {
+					background = backgrounds[owner];
+					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
+				}
 			});
 		}
 	});
