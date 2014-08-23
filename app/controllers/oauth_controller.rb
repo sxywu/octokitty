@@ -8,9 +8,9 @@ class OauthController < ApplicationController
                             :code => session_code},
                            headers: {
                             "Accept" => "application/json"
-                           }})
+                            }
+                          })
     session[:access_token] = JSON.parse(result.body)["access_token"]
-    redirect_to test_path
   end
 
 end
