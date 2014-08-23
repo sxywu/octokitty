@@ -46,7 +46,7 @@ require([
     AppView
 ) {
     app = {};
-    app.contributorPadding = 50;
+    app.contributorPadding = 35;
     app.d3Colors = d3.scale.category20();
 
     var appView = new AppView();

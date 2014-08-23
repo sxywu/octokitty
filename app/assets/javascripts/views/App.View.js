@@ -197,17 +197,7 @@ define([
 			return $.parseJSON(localStorage[name]);
 		},
 		render: function() {
-			var that = this;
-			// post processing: flatten the contributors' commit array, then sort them by date
-			_.each(this.contributors, function(commits, contributor) {
-				commits = _.chain(commits)
-					.flatten().sortBy(function(commit) {
-						commit.dateObj = new Date(commit.date);
-						return commit.dateObj;
-					}).value()
-				that.contributors[contributor] = commits;
-			});
-
+			this.formatData();
 			this.calculatePositions();
 
 			var lineVisualization = new LineVisualization();
@@ -223,6 +213,35 @@ define([
 				.data(commits)
 				.enter().append('circle')
 				.call(circleVisualization);
+		},
+		formatData: function() {
+			var that = this,
+				processedCommits,
+				interval = d3.time.week;
+			// post processing: flatten the contributors' commit array, then sort them by date
+			_.each(this.contributors, function(commits, contributor) {
+				processedCommits = {};
+				_.chain(commits)
+					.flatten()
+					.each(function(commit) {
+						// round date to the nearest week
+						var date = interval(new Date(commit.date.split('T')[0]));
+						var identifier = date + ':' + commit.owner + '/' + commit.repo;
+						if (processedCommits[identifier]) {
+							processedCommits[identifier].times.push({date: commit.date, url: commit.url});
+						} else {
+							commit.times = [{date: commit.date, url: commit.url}];
+							commit.date = date;
+							delete commit.url;
+							processedCommits[identifier] = commit;
+						}
+					});
+				processedCommits = _.sortBy(processedCommits, function(commit) {
+					commit.dateObj = new Date(commit.date);
+					return commit.dateObj;
+				});
+				that.contributors[contributor] = processedCommits;
+			});
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
@@ -257,9 +276,18 @@ define([
 				repos.push(contributor);
 			});
 			repos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
-			var range = _.chain(repos.length).range().map(function(i) {return i * app.contributorPadding}).value(),
+			var range = _.chain(repos.length).range().map(function(i) {return (i + 1) * app.contributorPadding}).value(),
 				repoScale = d3.scale.ordinal().domain(repos).range(range);
 			
+			// finally, a scale for the size of each circle
+			var allTimes = _.chain(this.contributors)
+				.map(function(commits) {
+					return _.map(commits, function(commit) {return commit.times.length});
+				}).flatten().value(),
+				minTime = _.min(allTimes, function(time) {return time}),
+				maxTime = _.max(allTimes, function(time) {return time}),
+				commitScale = d3.scale.linear().domain([minTime, maxTime]).range([3, 9]);
+
 			// set the x and y position of each commit.
 			// this is what we've been leading up to ladies and gents
 			_.each(this.contributors, function(commits, contributor) {
@@ -267,6 +295,7 @@ define([
 					commit.authorX = repoScale(commit.author);
 					commit.x = repoScale(commit.owner + '/' + commit.repo);
 					commit.y = timeScale(commit.dateObj);
+					commit.radius = commitScale(commit.times.length);
 				})
 			});
 		}
