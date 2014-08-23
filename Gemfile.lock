@@ -109,7 +109,6 @@ DEPENDENCIES
   coffee-rails (~> 3.2.1)
   httparty
   jquery-rails
-  oauth
   rails (= 3.2.18)
   sass-rails (~> 3.2.3)
   sqlite3
