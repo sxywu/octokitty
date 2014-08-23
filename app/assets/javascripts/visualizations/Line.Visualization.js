@@ -54,7 +54,6 @@ define([
 
 			source = target;
 		});
-		debugger
 		return _.flatten(path).join(' ');
 	}
 

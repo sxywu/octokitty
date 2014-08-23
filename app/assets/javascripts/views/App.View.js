@@ -208,13 +208,11 @@ define([
 
 			this.calculatePositions();
 
+			var lineVisualization = new LineVisualization();
 			this.svg.selectAll('path')
 				.data(_.values(this.contributors))
 				.enter().append('path')
-				.each(function() {
-					var lineVisualization = new LineVisualization();
-					d3.select(this).call(lineVisualization);
-				})
+				.call(lineVisualization);
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
