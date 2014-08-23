@@ -13,3 +13,8 @@ svg {
 	stroke-linecap: round;
     stroke-linejoin, round
 }
+
+.commit {
+	fill: #fff;
+	stroke-width: 2;
+}

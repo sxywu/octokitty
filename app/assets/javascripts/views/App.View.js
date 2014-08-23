@@ -3,13 +3,15 @@ define([
 	"underscore",
 	"backbone",
 	"d3",
-	"visualizations/Line.Visualization"
+	"visualizations/Line.Visualization",
+	"visualizations/Circle.Visualization"
 ], function(
 	$,
 	_,
 	Backbone,
 	d3,
-	LineVisualization
+	LineVisualization,
+	CircleVisualization
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
@@ -213,6 +215,14 @@ define([
 				.data(_.values(this.contributors))
 				.enter().append('path')
 				.call(lineVisualization);
+
+			var circleVisualization = new CircleVisualization(),
+				commits = _.chain(this.contributors).values()
+					.flatten().value();
+			this.svg.selectAll('circle')
+				.data(commits)
+				.enter().append('circle')
+				.call(circleVisualization);
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
