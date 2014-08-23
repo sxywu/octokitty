@@ -191,7 +191,7 @@ define([
 		},
 		render: function() {
 			var that = this;
-			// first, flatten the contributors' commit array, then sort them by date
+			// post processing: flatten the contributors' commit array, then sort them by date
 			_.each(this.contributors, function(commits, contributor) {
 				commits = _.chain(commits)
 					.flatten().sortBy(function(commit) {
@@ -201,7 +201,53 @@ define([
 				that.contributors[contributor] = commits;
 			});
 
-			debugger
+			this.calculatePositions();
+		},
+		/*
+		calculate the positions of each commit, where x-axis is contributor
+		and y-axis is time.  may flip the axis later on.
+		*/
+		calculatePositions: function() {
+			// first need scale for time
+			var minDate = _.chain(this.contributors)
+					.map(function(commits, contributor) {
+						// get first commit of all contributors, since it's already sorted
+						return _.first(commits);
+					}).min(function(commit) {return commit.dateObj}).value().dateObj,
+				maxDate = _.chain(this.contributors)
+					.map(function(commits, contributor) {
+						return _.last(commits);
+					}).max(function(commit) {return commit.dateObj}).value().dateObj,
+				svgHeight = $('svg').height(),
+				timeScale = d3.scale.linear().domain([minDate, maxDate]).range([0, svgHeight]);
+
+
+			// set up scale for contributors, sorted by their repos for the x-axis
+			var repos = [],
+				reposByContributor,
+				that = this;
+			_.each(this.contributors, function(commits, contributor) {
+				reposByContributor = _.filter(that.repos, function(repo) {return repo.owner === contributor});
+				if (reposByContributor.length) {
+					_.each(reposByContributor, function(repo) {
+						repos.push(repo.owner + '/' + repo.name);
+					});
+				} else {
+					repos.push(contributor);
+				}
+			});
+			repos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
+			var range = _.chain(repos.length).range().map(function(i) {return i * app.contributorPadding}).value(),
+				repoScale = d3.scale.ordinal().domain(repos).range(range);
+			
+			// set the x and y position of each commit.
+			// this is what we've been leading up to ladies and gents
+			_.each(this.contributors, function(commits, contributor) {
+				_.each(commits, function(commit) {
+					commit.x = repoScale(commit.owner + '/' + commit.repo);
+					commit.y = timeScale(commit.dateObj);
+				})
+			});
 		}
 	});
 })

@@ -46,6 +46,7 @@ require([
     AppView
 ) {
     app = {};
+    app.contributorPadding = 25;
 
     var appView = new AppView();
 });
