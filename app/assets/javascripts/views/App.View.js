@@ -265,7 +265,8 @@ define([
 						return _.last(commits);
 					}).max(function(commit) {return commit.dateObj}).value().dateObj,
 				svgHeight = $('svg').height(),
-				timeScale = d3.scale.linear().domain([minDate, maxDate]).range([0, svgHeight]);
+				timeScale = d3.scale.linear().domain([minDate, maxDate])
+					.range([app.padding.top, svgHeight - app.padding.left]);
 
 
 			// set up scale for contributors, sorted by their repos for the x-axis
@@ -282,7 +283,8 @@ define([
 				repos.push(contributor);
 			});
 			repos = this.sortedRepos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
-			var range = _.chain(repos.length).range().map(function(i) {return (i + 1) * app.contributorPadding}).value(),
+			var range = _.chain(repos.length).range()
+					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
 				repoScale = this.repoScale = d3.scale.ordinal().domain(repos).range(range);
 			
 			// finally, a scale for the size of each circle

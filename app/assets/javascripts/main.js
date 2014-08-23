@@ -46,6 +46,7 @@ require([
     AppView
 ) {
     app = {};
+    app.padding = {top: 35, bottom: 35, left: 35, right: 35};
     app.contributorPadding = 35;
     app.d3Colors = d3.scale.category20();
 
