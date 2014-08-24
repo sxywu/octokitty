@@ -23,70 +23,80 @@ define([
 			this.timeline = d3.select('svg.timeline');
 			this.graph = d3.select('svg.graph');
 
-			this.getData('enjalot');
+			$('.submitUser').click(_.bind(this.getUser, this));
 
 			this.lastPos = 0;
 			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 200);
 			$(window).scroll(windowScroll)
 		},
-		hitEndpoint: function(url, parse, callback, data) {
-			var that = this;
-			data = data || [];
-			$.ajax({
-	        	url: url,
-	        	success: function(response, status, request) {
-	        		_.each(response, function(resp) {
-	        			data.push(parse(resp));
-	        		});
-		            url = request.getAllResponseHeaders().match(/<(.*?)>; rel="next"/);
+		events: {
+			'click .submitUser': 'getUser'
+		},
+		getUser: function() {
+			// TODO(swu): validation
+			var user = $('.inputUser').val();
 
-		            if (url) {
-		            	url = url[1];
-		            	that.hitEndpoint(url, parse, callback, data);
-		            } else {
-						callback(data);
-		            }
-		        },
-		        error: function(response, status, request) {
-		        	debugger
-		        }
-		    });
+			if (this.hasPeriod(user)) return;
+			this.getData(user);
 		},
-		parseRepos: function(repo) {
-			return {
-				owner: repo.owner.login,
-				name: repo.name,
-				watches: repo.watchers_count,
-				stars: repo.stargazers_count,
-				forks: repo.forks_count
-			}
-		},
-		parseContributors: function(contributor) {
-			return {
-				author: contributor.login,
-				contributions: contributor.contributions
-			}
-		},
-		parseCommits: function(commit) {
-			return {
-				author: commit.author.login,
-				date: commit.commit.committer.date,
-				url: commit.url
-			}
-		},
+		// hitEndpoint: function(url, parse, callback, data) {
+		// 	var that = this;
+		// 	data = data || [];
+		// 	$.ajax({
+	 //        	url: url, 
+	 //        	success: function(response, status, request) {
+	 //        		_.each(response, function(resp) {
+	 //        			data.push(parse(resp));
+	 //        		});
+		//             url = request.getAllResponseHeaders().match(/<(.*?)>; rel="next"/);
+
+		//             if (url) {
+		//             	url = url[1];
+		//             	that.hitEndpoint(url, parse, callback, data);
+		//             } else {
+		// 				callback(data);
+		//             }
+		//         },
+		//         error: function(response, status, request) {
+		//         	debugger
+		//         }
+		//     });
+		// },
+		// parseRepos: function(repo) {
+		// 	return {
+		// 		owner: repo.owner.login,
+		// 		name: repo.name,
+		// 		watches: repo.watchers_count,
+		// 		stars: repo.stargazers_count,
+		// 		forks: repo.forks_count
+		// 	}
+		// },
+		// parseContributors: function(contributor) {
+		// 	return {
+		// 		author: contributor.login,
+		// 		contributions: contributor.contributions
+		// 	}
+		// },
+		// parseCommits: function(commit) {
+		// 	return {
+		// 		author: commit.author.login,
+		// 		date: commit.commit.committer.date,
+		// 		url: commit.url
+		// 	}
+		// },
 		/** get user's repo data, as well as the repo's contributor data
 		recurse one level, so we also get the contributors' repos and their contributor data
 		after we get all the repo and contributor data, call getCommits.
 		*/
 		getData: function(user, end) {
 			var that = this,
-				name = 'user:' + user,
+				// name = 'user:' + user,
 				url = '/users/' + user + '/repos',
 				numRepos = 5,
 				numContributors = 5,
 				callback = function(data) {
 					// save it first
-					that.saveToStorage(name, data);
+					// that.saveToStorage(name, data);
 
 					// after all repos are loaded, and the contributors are calculated for this user
 					// go and get the information of everyone in the contributors array
@@ -105,51 +115,56 @@ define([
 					_.chain(data).sortBy(function(repo) {
 						return -(repo.watches + repo.stars + repo.forks);
 					}).first(numRepos).each(function(repo) {
-						name = 'repo:' +  repo.name;
-						url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
-						callback = function(data) {
-							name = 'repo:' +  repo.name;
-							that.saveToStorage(name, data);
+						// name = 'repo:' +  repo.name;
+						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name)) {
+							url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
+							callback = function(data) {
+								// name = 'repo:' +  repo.name;
+								// that.saveToStorage(name, data);
 
-							var contributors = _.chain(data)
-								.filter(function(contributor) {
-									return contributor.author !== repo.owner && contributor.contributions > 5;
-								}).first(numContributors).map(function(contributor) {
-									if (!end && !_.contains(that.contributors, contributor.author)) {
-										// make sure contributor isn't already in the array
-										that.contributors.push(contributor.author);
-									}
-									return contributor.author;
-								}).value();
-							if (contributors.length) {
-								contributors.push(repo.owner)
-								that.repos.push({
-									name: repo.name,
-									owner: repo.owner,
-									contributors: contributors
-								})
-							}
-							allReposLoaded();
-						};
+								var contributors = _.chain(data)
+									.filter(function(contributor) {
+										return contributor.author !== repo.owner && contributor.contributions > 5;
+									}).first(numContributors).map(function(contributor) {
+										if (!end && !_.contains(that.contributors, contributor.author)) {
+											// make sure contributor isn't already in the array
+											that.contributors.push(contributor.author);
+										}
+										return contributor.author;
+									}).value();
+								if (contributors.length) {
+									contributors.push(repo.owner)
+									that.repos.push({
+										name: repo.name,
+										owner: repo.owner,
+										contributors: contributors
+									})
+								}
+								allReposLoaded();
+							};
 
-						if (localStorage[name]) {
-							callback(that.getFromStorage(name));
+							// if (localStorage[name]) {
+							// 	callback(that.getFromStorage(name));
+							// } else {
+								$.get(url, callback);
+							// }
 						} else {
-							that.hitEndpoint(url, that.parseContributors, callback);
+							allReposLoaded();
 						}
 					});
 				};
-			if (localStorage[name]) {
-				callback(this.getFromStorage(name));
-			} else {
-				this.hitEndpoint(url, this.parseRepos, callback);
-			}
+			// if (localStorage[name]) {
+			// 	callback(this.getFromStorage(name));
+			// } else {
+				$.get(url, callback);
+			// }
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
 		once we have all the data, call render.
 		*/
 		getCommits: function() {
+			debugger
 			if (this.repos) {
 				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
 					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
@@ -161,37 +176,44 @@ define([
 				this.contributors = {};
 				_.each(this.repos, function(repo) {
 					_.each(repo.contributors, function(contributor) {
-						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-						url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
-						callback = function(data) {
-							name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-							_.each(data, function(commit) {
-								commit.owner = repo.owner;
-								commit.repo = repo.name;
-							});
-							that.saveToStorage(name, data);
+						// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name) && !that.hasPeriod(contributer)) {
+							url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
+							callback = function(data) {
+								// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+								_.each(data, function(commit) {
+									commit.owner = repo.owner;
+									commit.repo = repo.name;
+								});
+								// that.saveToStorage(name, data);
 
-							if (that.contributors[contributor]) {
-								that.contributors[contributor].push(data);
-							} else {
-								that.contributors[contributor] = data;
-							}
+								if (that.contributors[contributor]) {
+									that.contributors[contributor].push(data);
+								} else {
+									that.contributors[contributor] = data;
+								}
 
-							allCommitsLoaded();
-						};
+								allCommitsLoaded();
+							};
 
-						if (localStorage[name]) {
-							callback(that.getFromStorage(name));
+							// if (localStorage[name]) {
+							// 	callback(that.getFromStorage(name));
+							// } else {
+								$.get(url, callback);
+							// }
 						} else {
-							that.hitEndpoint(url, that.parseCommits, callback);
+							allCommitsLoaded();
 						}
-
 					});
 				});
 
 			} else {
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			}
+		},
+		hasPeriod: function(string) {
+			// does some mofo have a period in their name/repo name?  well then they don't get included
+			return _.indexOf(string, '.') > -1;
 		},
 		/**
 		note(swu): the data is currently being stored to localStorage, but
