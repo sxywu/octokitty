@@ -11,6 +11,7 @@ class OauthController < ApplicationController
                             }
                           })
     session[:access_token] = JSON.parse(result.body)["access_token"]
+    redirect_to root_path
   end
 
 end
