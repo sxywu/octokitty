@@ -1,9 +1,12 @@
 class ReposController < ApplicationController
   def show
     username = params[:username]
-    response = HTTParty.get("https://api.github.com/users/#{username}/repos", {:params => {:access_token => "#{session[:access_token]}"}, :accept => :json, :headers => {"User-Agent" => "Octokitty"}
-      })
-    render :json => response.to_json
+    client = Octokit::Client.new \
+      :client_id     => "#{CONFIG['github']['client_id']}",
+      :client_secret => "#{CONFIG['github']['client_secret']}"
+    user = client.user "#{username}"
+    repos = user.rels[:repos]
+    render :json => repos.to_json
   end
 
 end
