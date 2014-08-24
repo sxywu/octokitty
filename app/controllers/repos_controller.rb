@@ -14,9 +14,15 @@ class ReposController < ApplicationController
       :client_secret => "#{CONFIG['github']['client_secret']}"
     client.auto_paginate = true
     user = client.user "#{username}"
-    repos = user.rels[:repos].get.data
-    if repos.class == Array
-      parsed_repos = repos.map do |repo|
+    repos = user.rels[:repos].get
+    rate_limit_remaining = repos.headers["x-ratelimit-remaining"]
+    if match = repos.headers["link"].match(/<(.*?)>\; rel\=\"next\"/)
+      next_url = match.captures[0]
+    else
+      next_url = nil
+    end
+    if repos.data.class == Array
+      parsed_repos = repos.data.map do |repo|
         repo = {owner: repo.owner.login,
           name: repo.name,
           watches: repo.watchers_count,
@@ -26,7 +32,9 @@ class ReposController < ApplicationController
     else
       parsed_repos = {}
     end
-      render :json => parsed_repos.to_json
+    parsed_repos << { rate_limit_remaining: rate_limit_remaining }
+    parsed_repos << { next_url: next_url }
+    render :json => parsed_repos.to_json
   end
 
 end
