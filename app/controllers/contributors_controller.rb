@@ -1,13 +1,13 @@
-class ReposController < ApplicationController
+class ContributorsController < ApplicationController
   def show
-    username = params[:username]
+    owner = params[:owner]
+    repo = params[:repo]
     client = Octokit::Client.new \
       :client_id     => "#{CONFIG['github']['client_id']}",
       :client_secret => "#{CONFIG['github']['client_secret']}"
     client.auto_paginate = true
-    user = client.user "#{username}"
-    repos = user.rels[:repos]
-    render :json => repos.to_json
+    contribs = client.contribs("#{owner}"+"/"+"#{repo}")
+    render :json => contribs.to_json
   end
 
 end
