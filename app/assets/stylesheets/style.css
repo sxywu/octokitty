@@ -2,6 +2,10 @@
 	
 }
 
+.hidden {
+	display: none;
+}
+
 .summary {
 	position: fixed;
 	top: 0;

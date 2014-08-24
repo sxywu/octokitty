@@ -40,8 +40,15 @@ define([
 		position();
 	}
 
+	Graph.update = function() {
+		node.call(updateNodes);
+		link.call(updateLinks);
+	}
+
 	var updateNodes = function(selection) {
-		selection.attr('width', function(d) {return d.repo ? repoSize : contributorSize})
+		selection
+			.classed('hidden', function(d) {return !d.show})
+			.attr('width', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('height', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('fill', function(d) {return d.repo ? '#fff' : app.d3Colors(d.owner)})
 			.attr('stroke', function(d) {return app.d3Colors(d.owner)})

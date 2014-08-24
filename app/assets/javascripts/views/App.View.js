@@ -184,9 +184,9 @@ define([
 			this.calculateTimeline();
 			this.calculateGraph();
 
-			var graphVisualization = new GraphVisualization()
+			this.graphVisualization = new GraphVisualization()
 				.nodes(this.nodes).links(this.links);
-			this.graph.call(graphVisualization);
+			this.graph.call(this.graphVisualization);
 
 			this.renderBackground();
 			// contributor lines
@@ -353,28 +353,44 @@ define([
 		windowScroll: function() {
 			if (!this.commits) return;
 
-			var top = $(window).scrollTop() + app.padding.top + $(window).height() / 2;
-			var selection;
+			var top = $(window).scrollTop() + app.padding.top + $(window).height() / 2,
+				commit, link, node;
 			if (this.lastPos < top) {
 				// if it's scrolling down
 				while (true) {
-					if (this.commits[this.lastIndex + 1].y > top) {
+					if (this.commits[this.lastIndex].y > top) {
 						break;
 					} else {
-
+						commit = this.commits[this.lastIndex];
+						node = _.find(this.nodes, function(node) {
+							return node.owner === commit.owner && node.repo && commit.repo;
+						});
+						link = _.find(this.links, function(link) {
+							return (link.source.owner === commit.author) && !link.source.repo 
+								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
+						});
+						node.show = true;
+						link.weight += 1;
 						this.lastIndex += 1;
 					}
 				}
 			} else if (this.lastPos > top) {
 				while (true) {
-					if (this.commits[this.lastIndex - 1].y < top) {
+					if (this.commits[this.lastIndex].y < top) {
 						break;
 					} else {
+						commit = this.commits[this.lastIndex];
+						link = _.find(this.links, function(link) {
+							return (link.source.owner === commit.author) && !link.source.repo 
+								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
+						});
+						link.weight -= 1;
 						this.lastIndex -= 1;
 					}
 				}
 			}
 			this.circleVisualization.highlight(this.commits[this.lastIndex]);
+			this.graphVisualization.update();
 
 			this.lastPos = top;
 		}
