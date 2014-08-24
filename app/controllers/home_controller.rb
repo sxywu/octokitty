@@ -1,5 +1,8 @@
 class HomeController < ApplicationController
   def index
+    if session[:access_token] == nil
+      redirect_to login_path
+    end
   end
 
   def login
