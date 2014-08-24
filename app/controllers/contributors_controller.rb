@@ -7,13 +7,17 @@ class ContributorsController < ApplicationController
       :client_secret => "#{CONFIG['github']['client_secret']}"
     client.auto_paginate = true
     contribs = client.contribs("#{owner}"+"/"+"#{repo}")
-    parsed_contribs = contribs.map do |contrib|
-      contrib = {
-        author: contrib.login,
-        contributions: contrib.contributions
-      }
+    if contribs.class == Array
+      parsed_contribs = contribs.map do |contrib|
+        contrib = {
+          author: contrib.login,
+          contributions: contrib.contributions
+        }
+      end
+      render :json => parsed_contribs.to_json
+    else
+      render :json => {}.to_json
     end
-    render :json => parsed_contribs.to_json
   end
 
 end
