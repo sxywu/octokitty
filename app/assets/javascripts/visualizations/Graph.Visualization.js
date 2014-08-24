@@ -53,7 +53,7 @@ define([
 	var updateLinks = function(selection) {
 		selection
 			.attr('stroke', function(d) {return app.d3Colors(d.source.owner)})
-			// .attr('stroke-width', 2);
+			.attr('stroke-width', function(d) {return d.weight});
 	}
 
 	var position = function() {
