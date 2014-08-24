@@ -3,6 +3,14 @@ class CommitsController < ApplicationController
     owner = params[:owner]
     repo = params[:repo]
     author = params[:author]
+    searched_user = SearchCount.find_by_username(author)
+    if searched_user
+      searched_user.count += 1
+      searched_user.save
+    else
+      searched_user = SearchCount.create(username: author, count: 1)
+    end
+
     client = Octokit::Client.new \
       :client_id     => "#{CONFIG['github']['client_id']}",
       :client_secret => "#{CONFIG['github']['client_secret']}"

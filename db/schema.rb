@@ -14,10 +14,10 @@
 ActiveRecord::Schema.define(:version => 20140824005629) do
 
   create_table "search_counts", :force => true do |t|
-    t.string   "username",   :null => false
-    t.integer  "count"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.string   "username",                  :null => false
+    t.integer  "count",      :default => 0
+    t.datetime "created_at",                :null => false
+    t.datetime "updated_at",                :null => false
   end
 
 end
