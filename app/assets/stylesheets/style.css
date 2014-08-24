@@ -2,19 +2,23 @@
 	
 }
 
-svg {
-	width: 100%;
-	height: 6000px;
-}
-
-.backgrounds {
-	height: 2000px;
+.summary {
 	position: fixed;
-	z-index: -1;
+	top: 0;
+	right: 0;
+	width: 50%;
+	height: 100%;
+	background-color: #FAFAFA;
 }
 
-.background {
+.timeline {
+	width: 100%;
+	height: 10000px;
+}
 
+.graph {
+	width: 75%;
+	height: 50%;
 }
 
 /*svg*/
