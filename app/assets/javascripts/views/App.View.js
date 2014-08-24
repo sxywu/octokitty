@@ -23,10 +23,12 @@ define([
 			this.timeline = d3.select('svg.timeline');
 			this.graph = d3.select('svg.graph');
 
-			$('.submitUser').click(_.bind(this.getUser, this));
+			// $('.submitUser').click(_.bind(this.getUser, this));
+			this.getData('enjalot');
 
+			this.lastIndex = 0;
 			this.lastPos = 0;
-			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 200);
+			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 100);
 			$(window).scroll(windowScroll)
 		},
 		events: {
@@ -35,62 +37,15 @@ define([
 		getUser: function() {
 			// TODO(swu): validation
 			var user = $('.inputUser').val();
+			this.repos = [];
+			this.contributors = [];
 
 			if (this.hasPeriod(user)) return;
 			this.getData(user);
 		},
-		// hitEndpoint: function(url, parse, callback, data) {
-		// 	var that = this;
-		// 	data = data || [];
-		// 	$.ajax({
-	 //        	url: url,
-	 //        	success: function(response, status, request) {
-	 //        		_.each(response, function(resp) {
-	 //        			data.push(parse(resp));
-	 //        		});
-		//             url = request.getAllResponseHeaders().match(/<(.*?)>; rel="next"/);
-
-		//             if (url) {
-		//             	url = url[1];
-		//             	that.hitEndpoint(url, parse, callback, data);
-		//             } else {
-		// 				callback(data);
-		//             }
-		//         },
-		//         error: function(response, status, request) {
-		//         	debugger
-		//         }
-		//     });
-		// },
-		// parseRepos: function(repo) {
-		// 	return {
-		// 		owner: repo.owner.login,
-		// 		name: repo.name,
-		// 		watches: repo.watchers_count,
-		// 		stars: repo.stargazers_count,
-		// 		forks: repo.forks_count
-		// 	}
-		// },
-		// parseContributors: function(contributor) {
-		// 	return {
-		// 		author: contributor.login,
-		// 		contributions: contributor.contributions
-		// 	}
-		// },
-		// parseCommits: function(commit) {
-		// 	return {
-		// 		author: commit.author.login,
-		// 		date: commit.commit.committer.date,
-		// 		url: commit.url
-		// 	}
-		// },
-		/** get user's repo data, as well as the repo's contributor data
-		recurse one level, so we also get the contributors' repos and their contributor data
-		after we get all the repo and contributor data, call getCommits.
-		*/
 		getData: function(user, end) {
 			var that = this,
-				// name = 'user:' + user,
+				name = 'user:' + user,
 				url = '/users/' + user + '/repos',
 				numRepos = 5,
 				numContributors = 5,
@@ -115,11 +70,11 @@ define([
 					_.chain(data).sortBy(function(repo) {
 						return -(repo.watches + repo.stars + repo.forks);
 					}).first(numRepos).each(function(repo) {
-						// name = 'repo:' +  repo.name;
+						name = 'repo:' +  repo.name;
 						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name)) {
 							url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
 							callback = function(data) {
-								// name = 'repo:' +  repo.name;
+								name = 'repo:' +  repo.name;
 								// that.saveToStorage(name, data);
 
 								var contributors = _.chain(data)
@@ -144,9 +99,9 @@ define([
 							};
 
 							// if (localStorage[name]) {
-							// 	callback(that.getFromStorage(name));
+								callback(that.getFromStorage(name));
 							// } else {
-								$.get(url, callback);
+								// $.get(url, callback);
 							// }
 						} else {
 							allReposLoaded();
@@ -154,9 +109,9 @@ define([
 					});
 				};
 			// if (localStorage[name]) {
-			// 	callback(this.getFromStorage(name));
+				callback(this.getFromStorage(name));
 			// } else {
-				$.get(url, callback);
+				// $.get(url, callback);
 			// }
 		},
 		/**
@@ -175,11 +130,11 @@ define([
 				this.contributors = {};
 				_.each(this.repos, function(repo) {
 					_.each(repo.contributors, function(contributor) {
-						// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
 						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name) && !that.hasPeriod(contributor)) {
 							url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
 							callback = function(data) {
-								// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
+								name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
 								_.each(data, function(commit) {
 									commit.owner = repo.owner;
 									commit.repo = repo.name;
@@ -196,9 +151,9 @@ define([
 							};
 
 							// if (localStorage[name]) {
-							// 	callback(that.getFromStorage(name));
+								callback(that.getFromStorage(name));
 							// } else {
-								$.get(url, callback);
+								// $.get(url, callback);
 							// }
 						} else {
 							allCommitsLoaded();
@@ -242,13 +197,14 @@ define([
 				.call(lineVisualization);
 
 			// commit circles
-			var circleVisualization = new CircleVisualization(),
-				commits = _.chain(this.contributors).values()
-					.flatten().value();
+			this.circleVisualization = new CircleVisualization();
+				// commits = _.chain(this.contributors).values()
+				// 	.flatten().value();
 			this.timeline.selectAll('circle')
-				.data(commits)
+				.data(this.commits)
 				.enter().append('circle')
-				.call(circleVisualization);
+				.call(this.circleVisualization);
+			this.commitCircles = d3.selectAll('.commit')[0]; 
 
 		},
 		formatData: function() {
@@ -361,7 +317,8 @@ define([
 					source = that.nodes[contributor];
 					that.links.push({
 						source: source,
-						target: target
+						target: target,
+						weight: 0
 					})
 				});
 			});
@@ -394,18 +351,30 @@ define([
 			});
 		},
 		windowScroll: function() {
-			var top = $(window).scrollTop() + app.padding.top;
+			if (!this.commits) return;
 
-			var lastIndex = 0;
+			var top = $(window).scrollTop() + app.padding.top + $(window).height() / 2;
+			var selection;
 			if (this.lastPos < top) {
 				// if it's scrolling down
-				// while (true) {
-					if (this.commits[lastIndex + 1].y > top) {
-						// current commit is more than the top, so take the last commit
-					}
-				// }
-			}
+				while (true) {
+					if (this.commits[this.lastIndex + 1].y > top) {
+						break;
+					} else {
 
+						this.lastIndex += 1;
+					}
+				}
+			} else if (this.lastPos > top) {
+				while (true) {
+					if (this.commits[this.lastIndex - 1].y < top) {
+						break;
+					} else {
+						this.lastIndex -= 1;
+					}
+				}
+			}
+			this.circleVisualization.highlight(this.commits[this.lastIndex]);
 
 			this.lastPos = top;
 		}
