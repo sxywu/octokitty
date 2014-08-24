@@ -4,23 +4,30 @@ define([
 	"backbone",
 	"d3",
 	"visualizations/Line.Visualization",
-	"visualizations/Circle.Visualization"
+	"visualizations/Circle.Visualization",
+	"visualizations/Graph.Visualization"
 ], function(
 	$,
 	_,
 	Backbone,
 	d3,
 	LineVisualization,
-	CircleVisualization
+	CircleVisualization,
+	GraphVisualization
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
 			this.repos = [];
 			this.contributors = [];
 
-			this.svg = d3.select('svg');
+			this.timeline = d3.select('svg.timeline');
+			this.graph = d3.select('svg.graph');
 
 			this.getData('enjalot');
+
+			this.lastPos = 0;
+			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 200);
+			$(window).scroll(windowScroll)
 		},
 		hitEndpoint: function(url, parse, callback, data) {
 			var that = this;
@@ -198,13 +205,17 @@ define([
 		},
 		render: function() {
 			this.formatData();
-			this.calculatePositions();
+			this.calculateTimeline();
+			this.calculateGraph();
+
+			var graphVisualization = new GraphVisualization()
+				.nodes(this.nodes).links(this.links);
+			this.graph.call(graphVisualization);
 
 			this.renderBackground();
-
 			// contributor lines
 			var lineVisualization = new LineVisualization();
-			this.svg.selectAll('path')
+			this.timeline.selectAll('path')
 				.data(_.values(this.contributors))
 				.enter().append('path')
 				.call(lineVisualization);
@@ -213,17 +224,17 @@ define([
 			var circleVisualization = new CircleVisualization(),
 				commits = _.chain(this.contributors).values()
 					.flatten().value();
-			this.svg.selectAll('circle')
+			this.timeline.selectAll('circle')
 				.data(commits)
 				.enter().append('circle')
 				.call(circleVisualization);
-
 
 		},
 		formatData: function() {
 			var that = this,
 				processedCommits,
 				interval = d3.time.week;
+			this.commits = [];
 			// post processing: flatten the contributors' commit array, then sort them by date
 			_.each(this.contributors, function(commits, contributor) {
 				processedCommits = {};
@@ -243,17 +254,21 @@ define([
 						}
 					});
 				processedCommits = _.sortBy(processedCommits, function(commit) {
+					that.commits.push(commit);
 					commit.dateObj = new Date(commit.date);
 					return commit.dateObj;
 				});
 				that.contributors[contributor] = processedCommits;
 			});
+
+			// sort this.commits
+			this.commits = _.sortBy(this.commits, function(commit) {return commit.dateObj});
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
 		and y-axis is time.  may flip the axis later on.
 		*/
-		calculatePositions: function() {
+		calculateTimeline: function() {
 			// first need scale for time
 			var minDate = _.chain(this.contributors)
 					.map(function(commits, contributor) {
@@ -264,8 +279,8 @@ define([
 					.map(function(commits, contributor) {
 						return _.last(commits);
 					}).max(function(commit) {return commit.dateObj}).value().dateObj,
-				svgHeight = $('svg').height(),
-				timeScale = d3.scale.linear().domain([minDate, maxDate])
+				svgHeight = $('.timeline').height(),
+				timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
 					.range([app.padding.top, svgHeight - app.padding.left]);
 
 
@@ -288,14 +303,10 @@ define([
 				repoScale = this.repoScale = d3.scale.ordinal().domain(repos).range(range);
 			
 			// finally, a scale for the size of each circle
-			var allTimes = _.chain(this.contributors)
-				.map(function(commits) {
-					return _.map(commits, function(commit) {return commit.times.length});
-				}).flatten().value(),
+			var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
 				minTime = _.min(allTimes, function(time) {return time}),
 				maxTime = _.max(allTimes, function(time) {return time}),
 				commitScale = d3.scale.linear().domain([minTime, maxTime]).range([3, 9]);
-
 			// set the x and y position of each commit.
 			// this is what we've been leading up to ladies and gents
 			_.each(this.contributors, function(commits, contributor) {
@@ -307,6 +318,34 @@ define([
 				})
 			});
 		},
+		calculateGraph: function() {
+			this.nodes = {};
+			this.links = [];
+			var source, target,
+				owner, repo,
+				that = this;
+			_.each(this.sortedRepos, function(ownerRepo) {
+				owner = ownerRepo.split('/')[0];
+				repo = ownerRepo.split('/')[1];
+				that.nodes[ownerRepo] = {
+					owner: owner,
+					repo: repo,
+					show: false
+				}
+			})
+			_.each(this.repos, function(repo) {
+				// contributor is the source, repo is the target
+				target = that.nodes[repo.owner + '/' + repo.name];
+				_.each(repo.contributors, function(contributor) {
+					source = that.nodes[contributor];
+					that.links.push({
+						source: source,
+						target: target
+					})
+				});
+			});
+			this.nodes = _.values(this.nodes);
+		},
 		// draw the background here bc i'm too lazy to put it in another file
 		renderBackground: function() {
 			var that = this,
@@ -316,12 +355,12 @@ define([
 			_.each(this.sortedRepos, function(repo) {
 				owner = repo.split('/')[0];
 				if (!backgrounds[owner]) {
-					background = that.svg.append('rect')
+					background = that.timeline.append('rect')
 						.classed('background', true)
 						.attr('x', that.repoScale(owner) - app.contributorPadding / 2)
 						.attr('y', 0)
 						.attr('width', app.contributorPadding)
-						.attr('height', $('svg').height() + 500)
+						.attr('height', $('.timeline').height() + 500)
 						.attr('stroke', app.d3Colors(owner))
 						.attr('stroke-opacity', .2)
 						.attr('fill', app.d3Colors(owner))
@@ -332,6 +371,22 @@ define([
 					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
 				}
 			});
+		},
+		windowScroll: function() {
+			var top = $(window).scrollTop() + app.padding.top;
+
+			var lastIndex = 0;
+			if (this.lastPos < top) {
+				// if it's scrolling down
+				// while (true) {
+					if (this.commits[lastIndex + 1].y > top) {
+						// current commit is more than the top, so take the last commit
+					}
+				// }
+			}
+			
+
+			this.lastPos = top;
 		}
 	});
 })
