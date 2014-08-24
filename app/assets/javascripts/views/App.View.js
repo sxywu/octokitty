@@ -33,7 +33,7 @@ define([
 			var that = this;
 			data = data || [];
 			$.ajax({
-	        	url: url, 
+	        	url: url,
 	        	success: function(response, status, request) {
 	        		_.each(response, function(resp) {
 	        			data.push(parse(resp));
@@ -81,7 +81,7 @@ define([
 		getData: function(user, end) {
 			var that = this,
 				name = 'user:' + user,
-				url = 'https://api.github.com/users/' + user + '/repos?per_page=100',
+				url = '/users/' + user + '/repos',
 				numRepos = 5,
 				numContributors = 5,
 				callback = function(data) {
@@ -106,7 +106,7 @@ define([
 						return -(repo.watches + repo.stars + repo.forks);
 					}).first(numRepos).each(function(repo) {
 						name = 'repo:' +  repo.name;
-						url = 'https://api.github.com/repos/' + repo.owner + '/' + repo.name + '/contributors?per_page=100';
+						url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
 						callback = function(data) {
 							name = 'repo:' +  repo.name;
 							that.saveToStorage(name, data);
@@ -162,7 +162,7 @@ define([
 				_.each(this.repos, function(repo) {
 					_.each(repo.contributors, function(contributor) {
 						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-						url = 'https://api.github.com/repos/' + repo.owner + '/' + repo.name + '/commits?author=' + contributor + '&per_page=100';
+						url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
 						callback = function(data) {
 							name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
 							_.each(data, function(commit) {
@@ -301,7 +301,7 @@ define([
 			var range = _.chain(repos.length).range()
 					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
 				repoScale = this.repoScale = d3.scale.ordinal().domain(repos).range(range);
-			
+
 			// finally, a scale for the size of each circle
 			var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
 				minTime = _.min(allTimes, function(time) {return time}),
@@ -384,7 +384,7 @@ define([
 					}
 				// }
 			}
-			
+
 
 			this.lastPos = top;
 		}

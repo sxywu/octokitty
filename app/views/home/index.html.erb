@@ -3,7 +3,10 @@
 <div class="summary">
 	<div>
 		<input type="text"></input>
-	</div>	
+	</div>
+  <% if session[:access_token] == nil %>
+    <a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">authorize me</a>
+  <% end %>
 	<svg class="graph"></svg>
 
 </div>
