@@ -23,10 +23,10 @@ class ReposController < ApplicationController
           stars: repo.stargazers_count,
           forks: repo.forks_count}
       end
-      render :json => parsed_repos.to_json
     else
-      render :json => {}.to_json
+      parsed_repos = {}
     end
+      render :json => parsed_repos.to_json
   end
 
 end

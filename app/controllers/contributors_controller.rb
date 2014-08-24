@@ -14,10 +14,10 @@ class ContributorsController < ApplicationController
           contributions: contrib.contributions
         }
       end
-      render :json => parsed_contribs.to_json
     else
-      render :json => {}.to_json
+      parsed_contribs = {}
     end
+      render :json => parsed_contribs.to_json
   end
 
 end

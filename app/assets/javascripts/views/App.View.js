@@ -43,7 +43,7 @@ define([
 		// 	var that = this;
 		// 	data = data || [];
 		// 	$.ajax({
-	 //        	url: url, 
+	 //        	url: url,
 	 //        	success: function(response, status, request) {
 	 //        		_.each(response, function(resp) {
 	 //        			data.push(parse(resp));
@@ -164,7 +164,6 @@ define([
 		once we have all the data, call render.
 		*/
 		getCommits: function() {
-			debugger
 			if (this.repos) {
 				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
 					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
@@ -177,7 +176,7 @@ define([
 				_.each(this.repos, function(repo) {
 					_.each(repo.contributors, function(contributor) {
 						// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name) && !that.hasPeriod(contributer)) {
+						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name) && !that.hasPeriod(contributor)) {
 							url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
 							callback = function(data) {
 								// name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;

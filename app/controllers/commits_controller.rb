@@ -16,10 +16,11 @@ class CommitsController < ApplicationController
           date: commit.commit.committer.date,
           url: commit.url
         }
-      render :json => parsed_commits.to_json
+      end
     else
-      render :json => {}.to_json
+      parsed_commits = {}
     end
+      render :json => parsed_commits.to_json
   end
 
 end
