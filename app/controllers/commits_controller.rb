@@ -9,14 +9,17 @@ class CommitsController < ApplicationController
       :client_secret => "#{CONFIG['github']['client_secret']}"
     client.auto_paginate = true
     commits = client.commits("#{owner}"+"/"+"#{repo}", {:author => "#{author}"})
-    parsed_commits = commits.map do |commit|
-      commit = {
-        author: commit.author.login,
-        date: commit.commit.committer.date,
-        url: commit.url
-      }
+    if commits.class == Array
+      parsed_commits = commits.map do |commit|
+        commit = {
+          author: commit.author.login,
+          date: commit.commit.committer.date,
+          url: commit.url
+        }
+      render :json => parsed_commits.to_json
+    else
+      render :json => {}.to_json
     end
-    render :json => parsed_commits.to_json
   end
 
 end
