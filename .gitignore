@@ -16,3 +16,6 @@
 
 # Ignore secret
 config/config.yml
+
+.DS_Store
+.DS_Store?
