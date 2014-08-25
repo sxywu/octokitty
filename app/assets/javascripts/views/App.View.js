@@ -27,7 +27,7 @@ define([
 			this.getData('enjalot');
 
 
-			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 300);
+			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
 		},
 		events: {
@@ -366,7 +366,8 @@ define([
 			if (!this.commitsByWeek) return;
 
 			var top = $(window).scrollTop() + $(window).height() / 3,
-				commit, link,
+				commits = this.commitsByWeek[this.lastIndex], 
+				link,
 				that = this;
 			if (this.lastPos < top) {
 				// if it's scrolling down
@@ -377,7 +378,8 @@ define([
 					if (this.commitsByWeek[this.lastIndex][0].y > top) {
 						break;
 					} else {
-						_.each(this.commitsByWeek[this.lastIndex], function(commit) {
+						commits = this.commitsByWeek[this.lastIndex];
+						_.each(commits, function(commit) {
 							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
 							link.weight += 1;
 							link.width = that.linkScale(link.weight);
@@ -396,7 +398,8 @@ define([
 					if (this.commitsByWeek[this.lastIndex][0].y < top) {
 						break;
 					} else {
-						_.each(this.commitsByWeek[this.lastIndex], function(commit) {
+						commits = this.commitsByWeek[this.lastIndex];
+						_.each(commits, function(commit) {
 							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
 							link.weight -= 1;
 							link.width = that.linkScale(link.weight);
@@ -407,7 +410,7 @@ define([
 					}
 				}
 			}
-			this.circleVisualization.highlight(this.commitsByWeek[this.lastIndex]);
+			this.circleVisualization.highlight(commits);
 			this.graphVisualization.update();
 
 			this.lastPos = top;
