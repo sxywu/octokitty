@@ -343,7 +343,7 @@ define([
 					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
 				}
 			});
-			$('svg').width(this.sortedRepos * appContributorPadding + app.padding.left + app.padding.right);
+			$('.timeline').width(this.sortedRepos.length * app.contributorPadding + app.padding.left + app.padding.right);
 		},
 		windowScroll: function() {
 			if (!this.commitsByWeek) return;
