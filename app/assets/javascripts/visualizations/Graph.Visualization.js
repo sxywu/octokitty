@@ -60,7 +60,7 @@ define([
 	var updateLinks = function(selection) {
 		selection
 			.attr('stroke', function(d) {return app.d3Colors(d.source.owner)})
-			.attr('stroke-width', function(d) {return d.weight});
+			.attr('stroke-width', function(d) {return d.width});
 	}
 
 	var position = function() {

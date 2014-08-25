@@ -185,7 +185,7 @@ define([
 			this.calculateGraph();
 
 			this.graphVisualization = new GraphVisualization()
-				.nodes(this.nodes).links(this.links);
+				.nodes(_.values(this.nodes)).links(_.values(this.links));
 			this.graph.call(this.graphVisualization);
 
 			this.renderBackground();
@@ -297,7 +297,7 @@ define([
 		},
 		calculateGraph: function() {
 			this.nodes = {};
-			this.links = [];
+			this.links = {};
 			var source, target,
 				owner, repo,
 				that = this;
@@ -307,7 +307,7 @@ define([
 				that.nodes[ownerRepo] = {
 					owner: owner,
 					repo: repo,
-					show: false
+					show: true
 				}
 			})
 			_.each(this.repos, function(repo) {
@@ -315,14 +315,23 @@ define([
 				target = that.nodes[repo.owner + '/' + repo.name];
 				_.each(repo.contributors, function(contributor) {
 					source = that.nodes[contributor];
-					that.links.push({
+					that.links[contributor + ',' + repo.owner + '/' + repo.name] = {
 						source: source,
 						target: target,
-						weight: 0
-					})
+						weight: 0,
+						width: 0,
+						total: 0
+					};
 				});
 			});
-			this.nodes = _.values(this.nodes);
+
+			_.each(this.commits, function(commit) {
+				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
+			});
+			var minWeight = _.min(this.links, function(link) {return link.total}).total,
+				maxWeight = _.max(this.links, function(link) {return link.total}).total;
+			this.linkScale = d3.scale.linear().domain([minWeight, maxWeight]).range([0, 8]);
+
 		},
 		// draw the background here bc i'm too lazy to put it in another file
 		renderBackground: function() {
@@ -354,7 +363,7 @@ define([
 			if (!this.commits) return;
 
 			var top = $(window).scrollTop() + app.padding.top + $(window).height() / 2,
-				commit, link, node;
+				commit, link;
 			if (this.lastPos < top) {
 				// if it's scrolling down
 				while (true) {
@@ -362,15 +371,10 @@ define([
 						break;
 					} else {
 						commit = this.commits[this.lastIndex];
-						node = _.find(this.nodes, function(node) {
-							return node.owner === commit.owner && node.repo && commit.repo;
-						});
-						link = _.find(this.links, function(link) {
-							return (link.source.owner === commit.author) && !link.source.repo 
-								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
-						});
-						node.show = true;
+						link = this.links[commit.author + ',' + commit.owner + '/' + commit.repo];
 						link.weight += 1;
+						link.width = this.linkScale(link.weight);
+						// this.nodes[commit.owner + '/' + commit.repo].show = true;
 						this.lastIndex += 1;
 					}
 				}
@@ -380,11 +384,9 @@ define([
 						break;
 					} else {
 						commit = this.commits[this.lastIndex];
-						link = _.find(this.links, function(link) {
-							return (link.source.owner === commit.author) && !link.source.repo 
-								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
-						});
+						link = this.links[commit.author + ',' + commit.owner + '/' + commit.repo];
 						link.weight -= 1;
+						link.width = this.linkScale(link.weight);
 						this.lastIndex -= 1;
 					}
 				}
