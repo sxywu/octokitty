@@ -15,8 +15,13 @@
 	background-color: #FAFAFA;
 }
 
+.leftPanel {
+	width: 50%;
+	overflow-y: visible;
+	overflow-x: scroll;
+}
+
 .timeline {
-	width: 100%;
 	height: 10000px;
 }
 

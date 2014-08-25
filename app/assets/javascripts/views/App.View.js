@@ -17,15 +17,10 @@ define([
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
-			this.repos = [];
-			this.contributors = [];
-
 			this.timeline = d3.select('svg.timeline');
 			this.graph = d3.select('svg.graph');
 
-			// $('.submitUser').click(_.bind(this.getUser, this));
-			this.getData('enjalot');
-
+			$('.submitUser').click(_.bind(this.getUser, this));
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
@@ -40,6 +35,7 @@ define([
 			this.contributors = [];
 
 			if (this.hasPeriod(user)) return;
+			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
 			this.getData(user);
 		},
 		getData: function(user, end) {
@@ -49,8 +45,7 @@ define([
 				numRepos = 5,
 				numContributors = 5,
 				callback = function(data) {
-					// save it first
-					// that.saveToStorage(name, data);
+					that.data[name] = data;
 
 					// after all repos are loaded, and the contributors are calculated for this user
 					// go and get the information of everyone in the contributors array
@@ -74,7 +69,7 @@ define([
 							url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
 							callback = function(data) {
 								name = 'repo:' +  repo.name;
-								// that.saveToStorage(name, data);
+								that.data[name] = data;
 
 								var contributors = _.chain(data)
 									.filter(function(contributor) {
@@ -97,28 +92,29 @@ define([
 								allReposLoaded();
 							};
 
-							// if (localStorage[name]) {
-								callback(that.getFromStorage(name));
-							// } else {
-								// $.get(url, callback);
-							// }
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
-			// if (localStorage[name]) {
-				callback(this.getFromStorage(name));
-			// } else {
-				// $.get(url, callback);
-			// }
+
+			if (that.data[name]) {
+				callback(that.data[name]);
+			} else {
+				$.get(url, callback);	
+			}
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
 		once we have all the data, call render.
 		*/
 		getCommits: function() {
-			if (this.repos) {
+			if (this.repos.length) {
 				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
 					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
 					name,
@@ -138,7 +134,7 @@ define([
 									commit.owner = repo.owner;
 									commit.repo = repo.name;
 								});
-								// that.saveToStorage(name, data);
+								that.data[name] = data;
 
 								if (that.contributors[contributor]) {
 									that.contributors[contributor].push(data);
@@ -149,11 +145,11 @@ define([
 								allCommitsLoaded();
 							};
 
-							// if (localStorage[name]) {
-								callback(that.getFromStorage(name));
-							// } else {
-								// $.get(url, callback);
-							// }
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allCommitsLoaded();
 						}
@@ -167,47 +163,40 @@ define([
 		hasPeriod: function(string) {
 			return _.indexOf(string, '.') > -1;
 		},
-		/**
-		note(swu): the data is currently being stored to localStorage, but
-		we should consider how we may want to save to db
-		*/
-		saveToStorage: function(name, data) {
-			localStorage[name] = JSON.stringify(data);
-		},
-		getFromStorage: function(name) {
-			return $.parseJSON(localStorage[name]);
-		},
 		render: function() {
-			this.formatData();
-			this.calculateTimeline();
-			this.calculateGraph();
+			if (_.values(this.contributors).length) {
+				this.formatData();
+				this.calculateTimeline();
+				this.calculateGraph();
 
-			this.graphVisualization = new GraphVisualization()
-				.nodes(_.values(this.nodes)).links(_.values(this.links));
-			this.graph.call(this.graphVisualization);
+				this.graphVisualization = new GraphVisualization()
+					.nodes(_.values(this.nodes)).links(_.values(this.links));
+				this.graph.call(this.graphVisualization);
 
-			this.renderBackground();
-			// contributor lines
-			var lineVisualization = new LineVisualization();
-			this.timeline.selectAll('path')
-				.data(_.values(this.contributors))
-				.enter().append('path')
-				.call(lineVisualization);
+				this.renderBackground();
+				// contributor lines
+				var lineVisualization = new LineVisualization();
+				this.timeline.selectAll('path')
+					.data(_.values(this.contributors))
+					.enter().append('path')
+					.call(lineVisualization);
 
-			// commit circles
-			this.circleVisualization = new CircleVisualization();
-				// commits = _.chain(this.contributors).values()
-				// 	.flatten().value();
-			this.timeline.selectAll('circle')
-				.data(this.commits)
-				.enter().append('circle')
-				.call(this.circleVisualization);
-			this.commitCircles = d3.selectAll('.commit')[0]; 
+				// commit circles
+				this.circleVisualization = new CircleVisualization();
+					// commits = _.chain(this.contributors).values()
+					// 	.flatten().value();
+				this.timeline.selectAll('circle')
+					.data(this.commits)
+					.enter().append('circle')
+					.call(this.circleVisualization);
+				this.commitCircles = d3.selectAll('.commit')[0]; 
 
-			this.lastIndex = 0;
-			this.lastPos = 0;
-			this.windowScroll();
-
+				this.lastIndex = 0;
+				this.lastPos = 0;
+				this.windowScroll();
+			} else {
+				// give "sorry you don't really have contributors for your top repos *sadface*" error message
+			}
 		},
 		formatData: function() {
 			var that = this,
@@ -227,7 +216,7 @@ define([
 							processedCommits[identifier].times.push({date: commit.date, url: commit.url});
 						} else {
 							commit.times = [{date: commit.date, url: commit.url}];
-							commit.date = date;
+							commit.date = date.toISOString();
 							delete commit.url;
 							processedCommits[identifier] = commit;
 						}
@@ -249,15 +238,8 @@ define([
 		*/
 		calculateTimeline: function() {
 			// first need scale for time
-			var minDate = _.chain(this.contributors)
-					.map(function(commits, contributor) {
-						// get first commit of all contributors, since it's already sorted
-						return _.first(commits);
-					}).min(function(commit) {return commit.dateObj}).value().dateObj,
-				maxDate = _.chain(this.contributors)
-					.map(function(commits, contributor) {
-						return _.last(commits);
-					}).max(function(commit) {return commit.dateObj}).value().dateObj,
+			var minDate = _.first(this.commits).dateObj,
+				maxDate = _.last(this.commits).dateObj,
 				svgHeight = $('.timeline').height(),
 				timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
 					.range([app.padding.top, svgHeight - app.padding.bottom]);
@@ -361,6 +343,7 @@ define([
 					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
 				}
 			});
+			$('svg').width(this.sortedRepos * appContributorPadding + app.padding.left + app.padding.right);
 		},
 		windowScroll: function() {
 			if (!this.commitsByWeek) return;
