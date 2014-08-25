@@ -16,8 +16,8 @@
 	<svg class="graph"></svg>
 
 	<div>
-		<% @popular_users.each do |username| %>
-			<p><%= username %></p>
+		<% @popular_users.each do |user| %>
+			<p><%= user[:username] %> | <%= user[:count] %></p>
 		<% end %>
 	</div>
 
