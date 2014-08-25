@@ -8,7 +8,7 @@ class ContributorsController < ApplicationController
       :client_id     => "#{client_id}",
       :client_secret => "#{client_secret}"
     client.auto_paginate = true
-    contribs = client.contribs("#{owner}"+"/"+"#{repo}")
+    contribs = client.contribs("#{owner}"+"/"+"#{repo}", {:per_page => 100})
     if contribs.class == Array
       parsed_contribs = contribs.map do |contrib|
         contrib = {

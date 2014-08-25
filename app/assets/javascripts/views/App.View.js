@@ -26,10 +26,9 @@ define([
 			// $('.submitUser').click(_.bind(this.getUser, this));
 			this.getData('enjalot');
 
-			this.lastIndex = 0;
-			this.lastPos = 0;
-			var windowScroll = _.throttle(_.bind(this.windowScroll, this), 100);
-			$(window).scroll(windowScroll)
+
+			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
+			$(window).scroll(windowScroll);
 		},
 		events: {
 			'click .submitUser': 'getUser'
@@ -166,7 +165,6 @@ define([
 			}
 		},
 		hasPeriod: function(string) {
-			// does some mofo have a period in their name/repo name?  well then they don't get included
 			return _.indexOf(string, '.') > -1;
 		},
 		/**
@@ -185,7 +183,7 @@ define([
 			this.calculateGraph();
 
 			this.graphVisualization = new GraphVisualization()
-				.nodes(this.nodes).links(this.links);
+				.nodes(_.values(this.nodes)).links(_.values(this.links));
 			this.graph.call(this.graphVisualization);
 
 			this.renderBackground();
@@ -205,6 +203,10 @@ define([
 				.enter().append('circle')
 				.call(this.circleVisualization);
 			this.commitCircles = d3.selectAll('.commit')[0]; 
+
+			this.lastIndex = 0;
+			this.lastPos = 0;
+			this.windowScroll();
 
 		},
 		formatData: function() {
@@ -258,7 +260,7 @@ define([
 					}).max(function(commit) {return commit.dateObj}).value().dateObj,
 				svgHeight = $('.timeline').height(),
 				timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
-					.range([app.padding.top, svgHeight - app.padding.left]);
+					.range([app.padding.top, svgHeight - app.padding.bottom]);
 
 
 			// set up scale for contributors, sorted by their repos for the x-axis
@@ -297,7 +299,7 @@ define([
 		},
 		calculateGraph: function() {
 			this.nodes = {};
-			this.links = [];
+			this.links = {};
 			var source, target,
 				owner, repo,
 				that = this;
@@ -307,7 +309,7 @@ define([
 				that.nodes[ownerRepo] = {
 					owner: owner,
 					repo: repo,
-					show: false
+					show: true
 				}
 			})
 			_.each(this.repos, function(repo) {
@@ -315,14 +317,24 @@ define([
 				target = that.nodes[repo.owner + '/' + repo.name];
 				_.each(repo.contributors, function(contributor) {
 					source = that.nodes[contributor];
-					that.links.push({
+					that.links[contributor + ',' + repo.owner + '/' + repo.name] = {
 						source: source,
 						target: target,
-						weight: 0
-					})
+						weight: 0,
+						width: 0,
+						total: 0
+					};
 				});
 			});
-			this.nodes = _.values(this.nodes);
+
+			_.each(this.commits, function(commit) {
+				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
+			});
+			var maxWeight = _.max(this.links, function(link) {return link.total}).total;
+			this.linkScale = d3.scale.linear().domain([0, maxWeight]).range([0, 8]);
+
+			this.commitsByWeek = _.chain(this.commits).groupBy(function(commit) {return commit.y}).values().value();
+
 		},
 		// draw the background here bc i'm too lazy to put it in another file
 		renderBackground: function() {
@@ -351,45 +363,54 @@ define([
 			});
 		},
 		windowScroll: function() {
-			if (!this.commits) return;
+			if (!this.commitsByWeek) return;
 
-			var top = $(window).scrollTop() + app.padding.top + $(window).height() / 2,
-				commit, link, node;
+			var top = $(window).scrollTop() + $(window).height() / 3,
+				commits = this.commitsByWeek[this.lastIndex], 
+				link,
+				that = this;
 			if (this.lastPos < top) {
 				// if it's scrolling down
 				while (true) {
-					if (this.commits[this.lastIndex].y > top) {
+					// if there are no more commits, return
+					if (!this.commitsByWeek[this.lastIndex]) return;
+
+					if (this.commitsByWeek[this.lastIndex][0].y > top) {
 						break;
 					} else {
-						commit = this.commits[this.lastIndex];
-						node = _.find(this.nodes, function(node) {
-							return node.owner === commit.owner && node.repo && commit.repo;
-						});
-						link = _.find(this.links, function(link) {
-							return (link.source.owner === commit.author) && !link.source.repo 
-								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
-						});
-						node.show = true;
-						link.weight += 1;
+						commits = this.commitsByWeek[this.lastIndex];
+						_.each(commits, function(commit) {
+							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
+							link.weight += 1;
+							link.width = that.linkScale(link.weight);
+							// that.nodes[commit.owner + '/' + commit.repo].show = true;
+						})
+						// commit = this.commits[this.lastIndex];
+
+						if (this.lastIndex + 1 === this.commitsByWeek.length) return;
 						this.lastIndex += 1;
 					}
 				}
 			} else if (this.lastPos > top) {
 				while (true) {
-					if (this.commits[this.lastIndex].y < top) {
+					if (!this.commitsByWeek[this.lastIndex]) return;
+
+					if (this.commitsByWeek[this.lastIndex][0].y < top) {
 						break;
 					} else {
-						commit = this.commits[this.lastIndex];
-						link = _.find(this.links, function(link) {
-							return (link.source.owner === commit.author) && !link.source.repo 
-								&& (link.target.owner === commit.owner) && link.target.repo === commit.repo;
+						commits = this.commitsByWeek[this.lastIndex];
+						_.each(commits, function(commit) {
+							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
+							link.weight -= 1;
+							link.width = that.linkScale(link.weight);
 						});
-						link.weight -= 1;
+
+						if (this.lastIndex - 1 < 0) return;
 						this.lastIndex -= 1;
 					}
 				}
 			}
-			this.circleVisualization.highlight(this.commits[this.lastIndex]);
+			this.circleVisualization.highlight(commits);
 			this.graphVisualization.update();
 
 			this.lastPos = top;

@@ -11,20 +11,15 @@ class ReposController < ApplicationController
 
     client_id = ENV['github_client_id'] || CONFIG['github']['client_id']
     client_secret = ENV['github_client_secret'] || CONFIG['github']['client_secret']
+
+    Octokit.auto_paginate = true
     client = Octokit::Client.new \
       :client_id     => "#{client_id}",
       :client_secret => "#{client_secret}"
     client.auto_paginate = true
-    user = client.user "#{username}"
-    repos = user.rels[:repos].get
-    rate_limit_remaining = repos.headers["x-ratelimit-remaining"]
-    if match = repos.headers["link"].match(/<(.*?)>\; rel\=\"next\"/)
-      next_url = match.captures[0]
-    else
-      next_url = nil
-    end
-    if repos.data.class == Array
-      parsed_repos = repos.data.map do |repo|
+    repos = client.repositories("#{username}", {:per_page => 100})
+    if repos.class == Array
+      parsed_repos = repos.map do |repo|
         repo = {owner: repo.owner.login,
           name: repo.name,
           watches: repo.watchers_count,
@@ -34,8 +29,6 @@ class ReposController < ApplicationController
     else
       parsed_repos = {}
     end
-    parsed_repos << { rate_limit_remaining: rate_limit_remaining }
-    parsed_repos << { next_url: next_url }
     render :json => parsed_repos.to_json
   end
 
