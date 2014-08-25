@@ -1,12 +1,19 @@
 * {
-
+	color: #666;
 }
 
 .hidden {
 	display: none;
 }
 
-.summary {
+.heart {
+	color: #d6616b;
+}
+
+/*
+right hand side
+*/
+.rightPanel {
 	position: fixed;
 	top: 0;
 	right: 0;
@@ -14,6 +21,22 @@
 	height: 100%;
 	background-color: #FAFAFA;
 }
+
+.searchbar {
+	padding: 40px;
+}
+
+.popularity {
+	padding: 40px;
+}
+
+.userSearches {
+	text-align: right;
+}
+
+/*
+left hand side
+*/
 
 .leftPanel {
 	width: 50%;
