@@ -15,4 +15,10 @@
 
 	<svg class="graph"></svg>
 
+	<div>
+		<% @popular_users.each do |username| %>
+			<p><%= username %></p>
+		<% end %>
+	</div>
+
 </div>
