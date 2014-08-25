@@ -6,10 +6,10 @@ class HomeController < ApplicationController
     if ordered_users.length == 0
       @popular_users = ['sxywu']
     elsif ordered_users.length < 5
-      @popular_users = ordered_users.map { |user| user.username }
+      @popular_users = ordered_users.map { |user| { username: user.username, count: user.count } }
     else
       @popular_users = []
-      ordered_users = ordered_users.map { |user| user.username }
+      ordered_users = ordered_users.map { |user| { username: user.username, count: user.count } }
       while @popular_users.length < 5
         @popular_users << ordered_users.shift
       end

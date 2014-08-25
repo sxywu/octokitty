@@ -4,25 +4,29 @@
 
 <div class="summary">
 
-	<% if session[:access_token] == nil %>
-	  <a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">authorize me</a>
-	 <% else %>
-	<div>
-		<input class="inputUser form-control input-lg" type="text" placeholder="enter github user name"></input>
-		<button class="submitUser btn btn-primary">Hit me!</button>
-	</div>
-	 <% end %>
+
+	<div class="searchbar">
+		<% if session[:access_token] == nil %>
+		  <h4><a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">Log me in</a></h4>
+		 <% else %>
+			<input class="inputUser form-control input-lg" type="text" placeholder="enter github user name"></input>
+			<button class="submitUser btn btn-primary">Hit me!</button>
+		 <% end %>
+	 </div>
 
 	<svg class="graph hidden"></svg>
 
-	<table class="popularity table table-hover">
-		<% @popular_users.each_with_index do |username, i| %>
-			<tr>
-				<td><%= i + 1 %>.</td>
-				<td><%= username %></td>
-				<td>searches</td>
-			</tr>
-		<% end %>
-	</table>
+	<div class="popularity">
+		<h4>Most commonly searched users</h4>
+		<table class="table table-hover">
+			<% @popular_users.each_with_index do |user, i| %>
+				<tr>
+					<td><%= i + 1 %>.</td>
+					<td><%= user[:username] %></td>
+					<td><%= user[:count] %> <span class="glyphicon glyphicon-heart"></span></td>
+				</tr>
+			<% end %>
+		</table>
+	</div>
 
 </div>
