@@ -3,15 +3,16 @@
 </div>
 
 <div class="summary">
+
+	<% if session[:access_token] == nil %>
+	  <a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">authorize me</a>
+	 <% else %>
 	<div>
 		<input class="inputUser form-control input-lg" type="text" placeholder="enter github user name"></input>
 		<button class="submitUser btn btn-primary">Hit me!</button>
 	</div>
+	 <% end %>
 
-	  <% if session[:access_token] == nil %>
-	    <a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">authorize me</a>
-	  <% end %>
-		
 	<svg class="graph"></svg>
 
 </div>
