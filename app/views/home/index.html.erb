@@ -13,12 +13,16 @@
 	</div>
 	 <% end %>
 
-	<svg class="graph"></svg>
+	<svg class="graph hidden"></svg>
 
-	<div>
-		<% @popular_users.each do |username| %>
-			<p><%= username %></p>
+	<table class="popularity table table-hover">
+		<% @popular_users.each_with_index do |username, i| %>
+			<tr>
+				<td><%= i + 1 %>.</td>
+				<td><%= username %></td>
+				<td>searches</td>
+			</tr>
 		<% end %>
-	</div>
+	</table>
 
 </div>
