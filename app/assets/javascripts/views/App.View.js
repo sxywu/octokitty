@@ -6,6 +6,7 @@ define([
 	"visualizations/Line.Visualization",
 	"visualizations/Circle.Visualization",
 	"visualizations/Graph.Visualization",
+	"visualizations/Label.Visualization",
 	"text!templates/Commit.Template.html"
 ], function(
 	$,
@@ -15,6 +16,7 @@ define([
 	LineVisualization,
 	CircleVisualization,
 	GraphVisualization,
+	LabelVisualization,
 	CommitTemplate
 ) {
 	return Backbone.View.extend({
@@ -24,12 +26,14 @@ define([
 			this.graphVisualization = new GraphVisualization();
 			this.lineVisualization = new LineVisualization();
 			this.circleVisualization = new CircleVisualization();
+			this.labelVisualization = new LabelVisualization();
 
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
+			$(window).scroll(_.bind(this.scrollLabel, this));
 		},
 		keydown: function(e) {
 			var key = e.which || e.keyCode,
@@ -231,9 +235,13 @@ define([
 					.call(this.circleVisualization);
 				this.commitCircles = d3.selectAll('.commit')[0];
 
+				this.renderTimelineLabels();
+
+
 				this.lastIndex = 0;
 				this.lastPos = 0;
 				this.windowScroll();
+				this.scrollLabel();
 
 			} else {
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
@@ -391,7 +399,26 @@ define([
 					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
 				}
 			});
+
 			$('.timeline').width(this.sortedRepos.length * app.contributorPadding + app.padding.left + app.padding.right);
+		},
+		renderTimelineLabels: function() {
+			var that = this;
+			this.timelineLabels = this.timeline.append('g');
+			this.timelineLabels.selectAll('.label')
+				.data(_.map(this.sortedRepos, function(repo, i) {
+					var ownerRepo = repo.split('/');
+					return {
+						owner: ownerRepo[0], 
+						repo: ownerRepo[1],
+						x: that.repoScale(repo),
+						y: 15,
+						rotate: -90
+					}
+				})).enter().append('g')
+				.classed('label', true)
+				.call(this.labelVisualization)
+				.call(this.labelVisualization.position);
 		},
 		windowScroll: function() {
 			if (!this.commitsByWeek) return;
@@ -446,9 +473,11 @@ define([
 			$('.week').text(app.formatTime(commits[0].dateObj));
 			$('.commitData').html(_.template(CommitTemplate, {commits: commits}));
 			$('.commitChevron').click(_.bind(this.toggleCommitSHA, this));
-			$('.commitData').scroll(function(e) {e.stopPropagation()});
 
 			this.lastPos = top;
+		},
+		scrollLabel: function() {
+			this.timelineLabels.attr('transform', 'translate(0,' + $(window).scrollTop() + ')');
 		},
 		showSomething: function(somethings) {
 			somethings = !_.isArray(somethings) ? [somethings] : somethings;
