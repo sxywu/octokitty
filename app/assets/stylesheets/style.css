@@ -10,6 +10,10 @@
 	color: #d6616b;
 }
 
+.title {
+	padding: 0px 40px;
+}
+
 /*
 right hand side
 */
@@ -23,7 +27,7 @@ right hand side
 }
 
 .searchbar {
-	padding: 40px;
+	padding: 0px 40px;
 }
 
 .popularity {
