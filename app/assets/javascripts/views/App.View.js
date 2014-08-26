@@ -52,6 +52,7 @@ define([
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
 			this.showSomething(['loading', 'popularity']);
 			this.disableSomething(['inputUser', 'submitUser']);
+			$('.progress-bar').css('width', '10%');
 			this.getData(user);
 		},
 		getData: function(user, end) {
