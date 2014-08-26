@@ -14,6 +14,16 @@
 	padding: 0px 40px;
 }
 
+.title h1 {
+	display: inline-block;
+	font-size: 36px;
+}
+
+.title .glyphicon {
+	font-size: 24px;
+	padding-left: 5px;
+}
+
 /*
 right hand side
 */
@@ -66,4 +76,11 @@ left hand side
 
 .commit {
 	stroke-width: 2;
+}
+
+/**
+lazy bootstrap overrides
+*/
+.submitUser {
+	height: 46px;
 }
