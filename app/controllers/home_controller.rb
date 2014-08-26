@@ -5,7 +5,7 @@ class HomeController < ApplicationController
 
     ordered_users = SearchCount.find(:all, :order => "count desc")
     if ordered_users.length == 0
-      @popular_users = ['sxywu']
+      @popular_users = [{username: "sxywu", count: 0}]
     elsif ordered_users.length < 10
       @popular_users = ordered_users.map { |user| { username: user.username, count: user.count } }
     else

@@ -10,7 +10,12 @@ class CommitsController < ApplicationController
       :client_id     => "#{client_id}",
       :client_secret => "#{client_secret}"
     client.auto_paginate = true
-    commits = client.commits("#{owner}"+"/"+"#{repo}", {:author => "#{author}", :per_page => 100})
+    begin
+      commits = client.commits("#{owner}"+"/"+"#{repo}", {:author => "#{author}", :per_page => 100})
+    rescue
+      commits = nil
+    end
+
     if commits.class == Array
       parsed_commits = commits.map do |commit|
         commit = {
