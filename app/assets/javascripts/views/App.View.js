@@ -426,6 +426,7 @@ define([
 			}
 			this.circleVisualization.highlight(commits);
 			this.graphVisualization.update();
+			$('.week').text(app.formatTime(commits[0].dateObj));
 
 			this.lastPos = top;
 		},
