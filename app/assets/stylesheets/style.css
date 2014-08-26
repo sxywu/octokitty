@@ -91,6 +91,17 @@ left hand side
 	overflow-x: scroll;
 }
 
+.explanation {
+	padding: 0px 40px;
+}
+
+.explanation h3 {
+	text-align: center;
+}
+
+.explanation img {
+	width: 100%;
+}
 
 .timeline {
 	height: 10000px;

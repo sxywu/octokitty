@@ -477,6 +477,7 @@ define([
 			this.lastPos = top;
 		},
 		scrollLabel: function() {
+			if (!this.timelineLabels) return;
 			this.timelineLabels.attr('transform', 'translate(0,' + $(window).scrollTop() + ')');
 		},
 		showSomething: function(somethings) {
