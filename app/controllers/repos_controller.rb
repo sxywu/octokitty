@@ -17,7 +17,12 @@ class ReposController < ApplicationController
       :client_id     => "#{client_id}",
       :client_secret => "#{client_secret}"
     client.auto_paginate = true
-    repos = client.repositories("#{username}", {:per_page => 100})
+    begin
+      repos = client.repositories("#{username}", {:per_page => 100})
+    rescue
+      repos = nil
+    end
+
     if repos.class == Array
       parsed_repos = repos.map do |repo|
         repo = {owner: repo.owner.login,
