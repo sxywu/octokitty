@@ -5,7 +5,7 @@ define([
 	_,
 	d3
 ) {
-	var force,
+	var force = d3.layout.force(),
 		width, height,
 		nodes, links,
 		node, link,
@@ -15,8 +15,7 @@ define([
 	var Graph = function(selection) {
 		width = $('.graph').width();
 		height = $('.graph').height();
-		force = d3.layout.force()
-			.size([width, height])
+		force.size([width, height])
 			.charge(-300);
 
 		link = selection.selectAll('line')
@@ -47,7 +46,7 @@ define([
 
 	var updateNodes = function(selection) {
 		selection
-			.classed('hidden', function(d) {return !d.show})
+			.classed('hide', function(d) {return !d.show})
 			.attr('width', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('height', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('fill', function(d) {return d.repo ? '#fff' : app.d3Colors(d.owner)})

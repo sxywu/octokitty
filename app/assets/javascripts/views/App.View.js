@@ -19,17 +19,17 @@ define([
 		initialize: function() {
 			this.timeline = d3.select('svg.timeline');
 			this.graph = d3.select('svg.graph');
+			this.graphVisualization = new GraphVisualization();
+			this.lineVisualization = new LineVisualization();
+			this.circleVisualization = new CircleVisualization();
 
 			$('.submitUser').click(_.bind(this.getUser, this));
+			$('.inputUser').keydown(_.bind(this.keydown, this));
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
 		},
-		events: {
-			'click .submitUser': 'getUser',
-			'keyup .inputUser': 'keyup'
-		},
-		keyup: function(e) {
+		keydown: function(e) {
 			var key = e.which || e.keyCode,
 				KEYCODE_ENTER = 13,
 				KEYCODE_ESC = 27;
@@ -42,18 +42,17 @@ define([
 			}
 		},
 		getUser: function() {
-			// TODO(swu): validation
 			var user = $('.inputUser').val();
 			this.repos = [];
 			this.contributors = [];
 
 			$('.submitUser').blur();
 
-			if (this.hasPeriod(user)) return;
+			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
+			this.showSomething(['loading', 'popularity']);
+			this.disableSomething(['inputUser', 'submitUser']);
 			this.getData(user);
-			this.showSomething('loading');
-			this.showSomething('popularity');
 		},
 		getData: function(user, end) {
 			var that = this,
@@ -85,7 +84,7 @@ define([
 						return -(repo.watches + repo.stars + repo.forks);
 					}).first(numRepos).each(function(repo) {
 						name = 'repo:' +  repo.name;
-						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name)) {
+						if (that.validate(repo.owner) && that.validate(repo.name)) {
 							url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
 							callback = function(data) {
 								name = 'repo:' +  repo.name;
@@ -149,7 +148,7 @@ define([
 				_.each(this.repos, function(repo) {
 					_.each(repo.contributors, function(contributor) {
 						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-						if (!that.hasPeriod(repo.owner) && !that.hasPeriod(repo.name) && !that.hasPeriod(contributor)) {
+						if (that.validate(repo.owner) && that.validate(repo.name) && that.validate(contributor)) {
 							url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
 							callback = function(data) {
 								name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
@@ -183,8 +182,8 @@ define([
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			}
 		},
-		hasPeriod: function(string) {
-			return _.indexOf(string, '.') > -1;
+		validate: function(string) {
+			return string && _.indexOf(string, ' ') === -1 && _.indexOf(string, '.') === -1;
 		},
 		render: function() {
 			if (_.values(this.contributors).length) {
@@ -195,22 +194,26 @@ define([
 				this.calculateTimeline();
 				this.calculateGraph();
 
-				this.graphVisualization = new GraphVisualization()
-					.nodes(_.values(this.nodes)).links(_.values(this.links));
+				$('.progress-bar').css('width', '100%');
+				this.showSomething(['timelineWrapper', 'summary']);
+				this.enableSomething(['inputUser', 'submitUser']);
+
+				// empty everything bc i'm lazy
+				$(this.timeline.node()).empty();
+				$(this.graph.node()).empty();
+
+				this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
 				this.graph.call(this.graphVisualization);
 
 				this.renderBackground();
+
 				// contributor lines
-				var lineVisualization = new LineVisualization();
 				this.timeline.selectAll('path')
 					.data(_.values(this.contributors))
 					.enter().append('path')
-					.call(lineVisualization);
+					.call(this.lineVisualization);
 
 				// commit circles
-				this.circleVisualization = new CircleVisualization();
-					// commits = _.chain(this.contributors).values()
-					// 	.flatten().value();
 				this.timeline.selectAll('circle')
 					.data(this.commits)
 					.enter().append('circle')
@@ -220,10 +223,6 @@ define([
 				this.lastIndex = 0;
 				this.lastPos = 0;
 				this.windowScroll();
-
-				$('.progress-bar').css('width', '100%');
-				this.showSomething('timelineWrapper');
-				this.showSomething('summary');
 
 			} else {
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
@@ -429,10 +428,24 @@ define([
 
 			this.lastPos = top;
 		},
-		showSomething: function(something) {
-			debugger
-			$('.' + something).siblings().addClass('hidden');
-			$('.' + something).removeClass('hidden');
+		showSomething: function(somethings) {
+			somethings = !_.isArray(somethings) ? [somethings] : somethings;
+			_.each(somethings, function(something) {
+				$('.' + something).siblings().addClass('hide');
+				$('.' + something).removeClass('hide');
+			});
+		},
+		disableSomething: function(somethings) {
+			somethings = !_.isArray(somethings) ? [somethings] : somethings;
+			_.each(somethings, function(something) {
+				$('.' + something).attr('disabled', true);
+			});
+		},
+		enableSomething: function(somethings) {
+			somethings = !_.isArray(somethings) ? [somethings] : somethings;
+			_.each(somethings, function(something) {
+				$('.' + something).attr('disabled', false);
+			});
 		}
 	});
 })
