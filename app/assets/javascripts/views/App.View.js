@@ -26,7 +26,20 @@ define([
 			$(window).scroll(windowScroll);
 		},
 		events: {
-			'click .submitUser': 'getUser'
+			'click .submitUser': 'getUser',
+			'keyup .inputUser': 'keyup'
+		},
+		keyup: function(e) {
+			var key = e.which || e.keyCode,
+				KEYCODE_ENTER = 13,
+				KEYCODE_ESC = 27;
+
+			if (key === KEYCODE_ENTER) {
+				this.getUser();
+				$('.inputUser').blur();
+			} else if (key === KEYCODE_ESC) {
+				$('.inputUser').blur();
+			}
 		},
 		getUser: function() {
 			// TODO(swu): validation
@@ -34,9 +47,13 @@ define([
 			this.repos = [];
 			this.contributors = [];
 
+			$('.submitUser').blur();
+
 			if (this.hasPeriod(user)) return;
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
 			this.getData(user);
+			this.showSomething('loading');
+			this.showSomething('popularity');
 		},
 		getData: function(user, end) {
 			var that = this,
@@ -45,6 +62,9 @@ define([
 				numRepos = 5,
 				numContributors = 5,
 				callback = function(data) {
+					// update loading indicator
+					$('.progress-bar').css('width', '25%');
+
 					that.data[name] = data;
 
 					// after all repos are loaded, and the contributors are calculated for this user
@@ -115,6 +135,9 @@ define([
 		*/
 		getCommits: function() {
 			if (this.repos.length) {
+				// update loading indicator
+				$('.progress-bar').css('width', '50%');
+
 				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
 					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
 					name,
@@ -165,6 +188,9 @@ define([
 		},
 		render: function() {
 			if (_.values(this.contributors).length) {
+				// update loading indicator
+				$('.progress-bar').css('width', '75%');
+
 				this.formatData();
 				this.calculateTimeline();
 				this.calculateGraph();
@@ -189,11 +215,16 @@ define([
 					.data(this.commits)
 					.enter().append('circle')
 					.call(this.circleVisualization);
-				this.commitCircles = d3.selectAll('.commit')[0]; 
+				this.commitCircles = d3.selectAll('.commit')[0];
 
 				this.lastIndex = 0;
 				this.lastPos = 0;
 				this.windowScroll();
+
+				$('.progress-bar').css('width', '100%');
+				this.showSomething('timelineWrapper');
+				this.showSomething('summary');
+
 			} else {
 				// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			}
@@ -397,6 +428,11 @@ define([
 			this.graphVisualization.update();
 
 			this.lastPos = top;
+		},
+		showSomething: function(something) {
+			debugger
+			$('.' + something).siblings().addClass('hidden');
+			$('.' + something).removeClass('hidden');
 		}
 	});
 })

@@ -48,6 +48,12 @@ right hand side
 	text-align: right;
 }
 
+.summary {
+	padding: 10% 40%;
+	width: 100%;
+	height: 50%;
+}
+
 /*
 left hand side
 */
@@ -58,13 +64,14 @@ left hand side
 	overflow-x: scroll;
 }
 
+
 .timeline {
 	height: 10000px;
 }
 
-.graph {
-	width: 75%;
-	height: 50%;
+.loading {
+	text-align: center;
+	margin: 250px 40px 40px 40px;
 }
 
 /*svg*/
