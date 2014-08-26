@@ -35,9 +35,9 @@ define([
 
 	Label.position = function(selection) {
 		selection.attr('transform', function(d) {
-			var x = d.x,
-				y = d.y + d.width / 2,
-				rotate = d.rotate;
+			var x = d.x + (Math.abs(d.rotate) === 90 ? 0 : d.width / 2),
+				y = d.y + (Math.abs(d.rotate) === 90 ? d.width / 2 : 0),
+				rotate = d.rotate || 0;
 			return 'translate(' + x + ',' + y + ')rotate(' + rotate + ')';
 		})
 	}

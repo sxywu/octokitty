@@ -1,16 +1,19 @@
 define([
 	"underscore",
-	"d3"
+	"d3",
+	"visualizations/Label.Visualization",
 ], function(
 	_,
-	d3
+	d3,
+	LabelVisualization
 ) {
 	var force = d3.layout.force(),
 		width, height,
 		nodes, links,
 		node, link,
 		contributorSize = 12,
-		repoSize = 8;
+		repoSize = 8,
+		labelVisualization = new LabelVisualization();
 
 	var Graph = function(selection) {
 		width = $('.graph').width();
@@ -22,10 +25,24 @@ define([
 			.data(links).enter().append('line')
 			.call(updateLinks);
 
-		node = selection.selectAll('rect')
-			.data(nodes).enter().append('rect')
-			.call(updateNodes);
+		node = selection.selectAll('.node')
+			.data(nodes).enter().append('g')
+			.classed('node', true);
+		node.append('rect');
+		node.append('g')
+			.datum(function(d) {
+				return {
+					owner: d.owner, 
+					repo: d.repo,
+					x: (d.repo ? repoSize : contributorSize) + 5,
+					y: 0
+				};
+			})
+			.classed('label', true)
+			.call(labelVisualization)
+			.call(labelVisualization.position);
 
+		node.call(updateNodes)
 		
 
 		startForce();
@@ -45,8 +62,11 @@ define([
 	}
 
 	var updateNodes = function(selection) {
-		selection
-			.classed('hide', function(d) {return !d.show})
+		selection.classed('hide', function(d) {return !d.show});
+
+		selection.select('rect')
+			.attr('x', function(d) {return -(d.repo ? repoSize : contributorSize) / 2})
+			.attr('y', function(d) {return -(d.repo ? repoSize : contributorSize) / 2})
 			.attr('width', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('height', function(d) {return d.repo ? repoSize : contributorSize})
 			.attr('fill', function(d) {return d.repo ? '#fff' : app.d3Colors(d.owner)})
@@ -63,9 +83,7 @@ define([
 	}
 
 	var position = function() {
-		node
-			.attr('x', function(d) {return d.x - (d.repo ? repoSize : contributorSize) / 2})
-			.attr('y', function(d) {return d.y - (d.repo ? repoSize : contributorSize) / 2});
+		node.attr('transform', function(d) {return 'translate(' + d.x + ',' + d.y + ')'});
 		link
 			.attr('x1', function(d) {return d.source.x})
 			.attr('y1', function(d) {return d.source.y})
