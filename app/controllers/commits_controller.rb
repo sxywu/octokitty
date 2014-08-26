@@ -16,7 +16,8 @@ class CommitsController < ApplicationController
         commit = {
           author: commit.author.login,
           date: commit.commit.committer.date,
-          url: commit.url
+          url: commit.html_url,
+          sha: commit.sha
         }
       end
     else

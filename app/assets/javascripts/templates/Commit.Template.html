@@ -1,0 +1,40 @@
+<% 
+
+commits = _.groupBy(commits, function(commit) {return commit.owner + '/' + commit.repo});
+_.each(commits, function(repos) { %>
+	<div class="repos">
+		<div>
+			<span class="label" style="
+				background-color: #fff;
+				border: 2px solid <%= app.d3Colors(repos[0].owner) %>;
+				color: <%= app.d3Colors(repos[0].owner) %>">
+				<%= repos[0].owner + '/' + repos[0].repo %></span>
+			<span> <%= _.reduce(repos, function(memo, repo) {return memo + repo.times.length}, 0) %> total commits: </span>
+
+			<ul>
+				<% _.each(repos, function(repo) { %>
+					<li>
+						<span class="commitChevron glyphicon glyphicon-chevron-right"></span>
+						<span class="label" style="
+						background-color: <%= app.d3Colors(repo.author) %>;
+						border: 2px solid <%= app.d3Colors(repo.author) %>;
+						color: #fff">
+							<%= repo.author %></span>
+						<span> <%= repo.times.length %> commits </span>
+						
+
+						<ul class="commitSHA hide">
+							<% _.each(repo.times, function(time) { %>
+								<li>
+									<%= app.formatTime(time.date) %>
+									<a href="<%= time.url %>" target="_new"><%= time.sha %></a>
+								</li>
+							<% }); %>
+						</ul>
+					</li>
+				<% }); %>
+			</ul>
+		</div>
+		
+	</div>
+<% }) %>

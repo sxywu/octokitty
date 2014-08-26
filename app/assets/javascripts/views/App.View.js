@@ -5,7 +5,8 @@ define([
 	"d3",
 	"visualizations/Line.Visualization",
 	"visualizations/Circle.Visualization",
-	"visualizations/Graph.Visualization"
+	"visualizations/Graph.Visualization",
+	"text!templates/Commit.Template.html"
 ], function(
 	$,
 	_,
@@ -13,7 +14,8 @@ define([
 	d3,
 	LineVisualization,
 	CircleVisualization,
-	GraphVisualization
+	GraphVisualization,
+	CommitTemplate
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
@@ -40,6 +42,14 @@ define([
 			} else if (key === KEYCODE_ESC) {
 				$('.inputUser').blur();
 			}
+		},
+		toggleCommitSHA: function(e) {
+			var $chevron = $(e.target),
+				$commitSHA = $chevron.siblings('.commitSHA');
+
+			$chevron.toggleClass('glyphicon-chevron-right');
+			$chevron.toggleClass('glyphicon-chevron-down');
+			$commitSHA.toggleClass('hide');
 		},
 		getUser: function() {
 			var user = $('.inputUser').val();
@@ -244,11 +254,18 @@ define([
 						var date = interval(new Date(commit.date.split('T')[0]));
 						var identifier = date + ':' + commit.owner + '/' + commit.repo;
 						if (processedCommits[identifier]) {
-							processedCommits[identifier].times.push({date: commit.date, url: commit.url});
+							processedCommits[identifier].times.push({
+								date: new Date(commit.date),
+								url: commit.url,
+								sha: commit.sha});
 						} else {
-							commit.times = [{date: commit.date, url: commit.url}];
+							commit.times = [{
+								date: new Date(commit.date),
+								url: commit.url,
+								sha: commit.sha}];
 							commit.date = date.toISOString();
 							delete commit.url;
+							delete commit.sha;
 							processedCommits[identifier] = commit;
 						}
 					});
@@ -427,6 +444,9 @@ define([
 			this.circleVisualization.highlight(commits);
 			this.graphVisualization.update();
 			$('.week').text(app.formatTime(commits[0].dateObj));
+			$('.commitData').html(_.template(CommitTemplate, {commits: commits}));
+			$('.commitChevron').click(_.bind(this.toggleCommitSHA, this));
+			$('.commitData').scroll(function(e) {e.stopPropagation()});
 
 			this.lastPos = top;
 		},
