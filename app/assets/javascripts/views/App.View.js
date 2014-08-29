@@ -31,6 +31,8 @@ define([
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 
+			this.getUser();
+
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
 			$(window).scroll(_.bind(this.scrollLabel, this));
@@ -61,6 +63,8 @@ define([
 			this.contributors = [];
 
 			$('.submitUser').blur();
+
+			user = 'enjalot';
 
 			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
@@ -126,22 +130,24 @@ define([
 								allReposLoaded();
 							};
 
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
 
-			if (that.data[name]) {
-				callback(that.data[name]);
-			} else {
-				$.get(url, callback);	
-			}
+			callback($.parseJSON(localStorage[name]))
+			// if (that.data[name]) {
+			// 	callback(that.data[name]);
+			// } else {
+			// 	$.get(url, callback);	
+			// }
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
@@ -182,11 +188,12 @@ define([
 								allCommitsLoaded();
 							};
 
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allCommitsLoaded();
 						}
@@ -431,7 +438,10 @@ define([
 				// if it's scrolling down
 				while (true) {
 					// if there are no more commits, return
-					if (!this.commitsByWeek[this.lastIndex]) return;
+					if (!this.commitsByWeek[this.lastIndex]) {
+						this.lastIndex -= 1;
+						break;
+					}
 
 					if (this.commitsByWeek[this.lastIndex][0].y > top) {
 						break;
@@ -439,31 +449,40 @@ define([
 						commits = this.commitsByWeek[this.lastIndex];
 						_.each(commits, function(commit) {
 							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
-							link.weight += 1;
-							link.width = that.linkScale(link.weight);
+							if (link.weight < link.total) {
+								link.weight += 1;
+								link.width = that.linkScale(link.weight);
+							}
+
+							console.log(that.lastIndex, commit.author + ',' + commit.owner + '/' + commit.repo, 
+								link.weight, link.total)
 							// that.nodes[commit.owner + '/' + commit.repo].show = true;
 						})
 						// commit = this.commits[this.lastIndex];
-
-						if (this.lastIndex + 1 === this.commitsByWeek.length) return;
 						this.lastIndex += 1;
 					}
 				}
 			} else if (this.lastPos > top) {
 				while (true) {
-					if (!this.commitsByWeek[this.lastIndex]) return;
-
+					if (!this.commitsByWeek[this.lastIndex]) {
+						this.lastIndex += 1;
+						break;
+					}
+					
 					if (this.commitsByWeek[this.lastIndex][0].y < top) {
 						break;
 					} else {
 						commits = this.commitsByWeek[this.lastIndex];
 						_.each(commits, function(commit) {
 							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
-							link.weight -= 1;
-							link.width = that.linkScale(link.weight);
-						});
+							if (link.weight > 0) {
+								link.weight -= 1;
+								link.width = that.linkScale(link.weight);
+							}
 
-						if (this.lastIndex - 1 < 0) return;
+							console.log(that.lastIndex, commit.author + ',' + commit.owner + '/' + commit.repo, 
+								link.weight)
+						});
 						this.lastIndex -= 1;
 					}
 				}
