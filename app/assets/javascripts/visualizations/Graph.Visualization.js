@@ -38,9 +38,10 @@ define([
 					y: 0
 				};
 			})
-			.classed('label', true)
+			.classed({'label': true, 'hide': true})
 			.call(labelVisualization)
 			.call(labelVisualization.position);
+
 
 		node.call(updateNodes)
 		
