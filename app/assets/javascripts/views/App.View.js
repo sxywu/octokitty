@@ -495,7 +495,9 @@ define([
 					}
 				}
 			}
+
 			this.circleVisualization.highlight(commits);
+			this.graphVisualization.showLabels(commits);
 			this.graphVisualization.update();
 			$('.week').text(app.formatTime(commits[0].dateObj));
 			$('.commitData').html(_.template(CommitTemplate, {commits: commits}));

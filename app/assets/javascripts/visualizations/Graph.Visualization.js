@@ -93,6 +93,17 @@ define([
 			.attr('y2', function(d) {return d.target.y});
 	}
 
+	Graph.showLabels = function(commits) {
+		commits = _.chain(commits)
+			.map(function(commit) {
+				return [commit.author, commit.owner + '/' + commit.repo];
+			}).flatten().value();
+		node.select('.label').classed('hide', true)
+			.filter(function(d) {
+				return (d.repo ? _.contains(commits, d.owner + '/' + d.repo) : _.contains(commits, d.owner));
+			}).classed('hide', false);
+	}
+
 	Graph.nodes = function(val) {
 		if (!arguments.length) return nodes;
 		nodes = val;
