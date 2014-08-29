@@ -15,7 +15,7 @@ define([
 			.attr('dy', '.35em')
 			.attr('fill', function(d) {return (d.repo ? app.d3Colors(d.owner) : '#fff')})
 			.text(function(d) {
-				return d.repo || d.owner;
+				return d.owner + (d.repo ? '/' + d.repo : '');
 			}).each(function(d) {
 				d.width = this.getBoundingClientRect().width + 2 * padding;
 			});
