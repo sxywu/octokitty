@@ -354,9 +354,10 @@ define([
 				that.nodes[ownerRepo] = {
 					owner: owner,
 					repo: repo,
-					show: true
+					show: 0,
+					total: 0
 				}
-			})
+			});
 			_.each(this.repos, function(repo) {
 				// contributor is the source, repo is the target
 				target = that.nodes[repo.owner + '/' + repo.name];
@@ -373,6 +374,8 @@ define([
 			});
 
 			_.each(this.commits, function(commit) {
+				that.nodes[commit.author].total += 1;
+				that.nodes[commit.owner + '/' + commit.repo].total += 1;
 				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
 			});
 			var maxWeight = _.max(this.links, function(link) {return link.total}).total;
@@ -432,7 +435,7 @@ define([
 
 			var top = $(window).scrollTop() + $(window).height() / 3,
 				commits = this.commitsByWeek[this.lastIndex], 
-				link,
+				node, link,
 				that = this;
 			if (this.lastPos < top) {
 				// if it's scrolling down
@@ -454,11 +457,13 @@ define([
 								link.width = that.linkScale(link.weight);
 							}
 
-							console.log(that.lastIndex, commit.author + ',' + commit.owner + '/' + commit.repo, 
-								link.weight, link.total)
-							// that.nodes[commit.owner + '/' + commit.repo].show = true;
+							node = that.nodes[commit.author];
+							if (node.show < node.total) node.show += 1;
+
+							node = that.nodes[commit.owner + '/' + commit.repo];
+							if (node.show < node.total) node.show += 1;
+
 						})
-						// commit = this.commits[this.lastIndex];
 						this.lastIndex += 1;
 					}
 				}
@@ -480,8 +485,11 @@ define([
 								link.width = that.linkScale(link.weight);
 							}
 
-							console.log(that.lastIndex, commit.author + ',' + commit.owner + '/' + commit.repo, 
-								link.weight)
+							node = that.nodes[commit.author];
+							if (node.show > 0) node.show -= 1;
+
+							node = that.nodes[commit.owner + '/' + commit.repo];
+							if (node.show > 0) node.show -= 1;
 						});
 						this.lastIndex -= 1;
 					}

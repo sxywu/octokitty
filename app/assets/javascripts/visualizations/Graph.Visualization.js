@@ -66,6 +66,7 @@ define([
 		selection.classed('hide', function(d) {return !d.show});
 
 		selection.select('rect')
+			.classed('hide', function(d) {return !d.show})
 			.attr('x', function(d) {return -(d.repo ? repoSize : contributorSize) / 2})
 			.attr('y', function(d) {return -(d.repo ? repoSize : contributorSize) / 2})
 			.attr('width', function(d) {return d.repo ? repoSize : contributorSize})
