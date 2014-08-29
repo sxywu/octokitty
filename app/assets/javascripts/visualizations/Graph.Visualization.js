@@ -10,7 +10,7 @@ define([
 	var force = d3.layout.force(),
 		width, height,
 		nodes, links,
-		node, link,
+		node, link, label,
 		contributorSize = 12,
 		repoSize = 8,
 		labelVisualization = new LabelVisualization();
@@ -27,9 +27,10 @@ define([
 
 		node = selection.selectAll('.node')
 			.data(nodes).enter().append('g')
-			.classed('node', true);
+			.classed('node', true)
+			.call(drag());
 		node.append('rect');
-		node.append('g')
+		label = node.append('g')
 			.datum(function(d) {
 				return {
 					owner: d.owner, 
@@ -93,12 +94,24 @@ define([
 			.attr('y2', function(d) {return d.target.y});
 	}
 
+	var drag = function() {
+		return d3.behavior.drag()
+			.on('drag', function() {
+				d3.select(this)
+					.each(function(d) {
+						d.x += d3.event.dx;
+						d.y += d3.event.dy;
+					});
+				position();	
+			})
+	}
+
 	Graph.showLabels = function(commits) {
 		commits = _.chain(commits)
 			.map(function(commit) {
 				return [commit.author, commit.owner + '/' + commit.repo];
 			}).flatten().value();
-		node.select('.label').classed('hide', true)
+		label.classed('hide', true)
 			.filter(function(d) {
 				return (d.repo ? _.contains(commits, d.owner + '/' + d.repo) : _.contains(commits, d.owner));
 			}).classed('hide', false);
