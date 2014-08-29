@@ -31,7 +31,7 @@ define([
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 
-			this.getUser();
+			// this.getUser();
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
@@ -64,7 +64,7 @@ define([
 
 			$('.submitUser').blur();
 
-			user = 'enjalot';
+			// user = 'enjalot';
 
 			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
@@ -121,33 +121,30 @@ define([
 									}).value();
 								if (contributors.length) {
 									contributors.push(repo.owner)
-									that.repos.push({
-										name: repo.name,
-										owner: repo.owner,
-										contributors: contributors
-									})
+									repo.contributors = contributors;
+									that.repos.push(repo);
 								}
 								allReposLoaded();
 							};
 
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
+							// callback($.parseJSON(localStorage[name]))
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
 
-			callback($.parseJSON(localStorage[name]))
-			// if (that.data[name]) {
-			// 	callback(that.data[name]);
-			// } else {
-			// 	$.get(url, callback);	
-			// }
+			// callback($.parseJSON(localStorage[name]))
+			if (that.data[name]) {
+				callback(that.data[name]);
+			} else {
+				$.get(url, callback);	
+			}
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
@@ -188,12 +185,12 @@ define([
 								allCommitsLoaded();
 							};
 
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
+							// callback($.parseJSON(localStorage[name]))
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allCommitsLoaded();
 						}
