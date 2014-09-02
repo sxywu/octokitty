@@ -31,7 +31,7 @@ define([
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 
-			// this.getUser();
+			this.getUser();
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
@@ -64,7 +64,7 @@ define([
 
 			$('.submitUser').blur();
 
-			// user = 'enjalot';
+			user = 'enjalot';
 
 			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
@@ -127,24 +127,24 @@ define([
 								allReposLoaded();
 							};
 
-							// callback($.parseJSON(localStorage[name]))
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
 
-			// callback($.parseJSON(localStorage[name]))
-			if (that.data[name]) {
-				callback(that.data[name]);
-			} else {
-				$.get(url, callback);	
-			}
+			callback($.parseJSON(localStorage[name]))
+			// if (that.data[name]) {
+			// 	callback(that.data[name]);
+			// } else {
+			// 	$.get(url, callback);	
+			// }
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
@@ -185,12 +185,12 @@ define([
 								allCommitsLoaded();
 							};
 
-							// callback($.parseJSON(localStorage[name]))
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allCommitsLoaded();
 						}
@@ -307,21 +307,40 @@ define([
 
 			// set up scale for contributors, sorted by their repos for the x-axis
 			var repos = [],
-				reposByContributor,
+				contributorObj,
+				// reposByContributor,
 				that = this;
 			_.each(this.contributors, function(commits, contributor) {
-				reposByContributor = _.filter(that.repos, function(repo) {return repo.owner === contributor});
-				if (reposByContributor.length) {
-					_.each(reposByContributor, function(repo) {
-						repos.push(repo.owner + '/' + repo.name);
-					});
+				contributorObj = {
+					owner: contributor,
+					repos: []
 				}
-				repos.push(contributor);
+				_.each(that.repos, function(repo) {
+					if (repo.owner === contributor) {
+						contributorObj.repos.push(repo);
+					}
+				});
+				repos.push(contributorObj);
 			});
-			repos = this.sortedRepos = _.sortBy(repos, function(repo) {return repo.toLowerCase()});
-			var range = _.chain(repos.length).range()
+			var popularitySum,
+				matchedRepo;
+			this.sortedRepos = [];
+			_.chain(repos).sortBy(function(contributorObj) {
+				popularitySum = 0;
+				contributorObj.repos = _.sortBy(contributorObj.repos, function(repo) {
+					popularitySum += repo.watches + repo.stars + repo.forks;
+					return -repo.watches + repo.stars + repo.forks;
+				});
+				return -popularitySum;
+			}).each(function(contributorObj) {
+				that.sortedRepos.push(contributorObj.owner);
+				_.each(contributorObj.repos, function(repo) {
+					that.sortedRepos.push(repo.owner + '/' + repo.name);
+				})
+			});
+			var range = _.chain(this.sortedRepos.length).range()
 					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
-				repoScale = this.repoScale = d3.scale.ordinal().domain(repos).range(range);
+				repoScale = this.repoScale = d3.scale.ordinal().domain(this.sortedRepos).range(range);
 
 			// finally, a scale for the size of each circle
 			var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
@@ -420,7 +439,8 @@ define([
 						repo: ownerRepo[1],
 						x: that.repoScale(repo),
 						y: 15,
-						rotate: -90
+						rotate: -90,
+						text: ownerRepo[0] + (ownerRepo[1] ? '/' + ownerRepo[1] : '')
 					}
 				})).enter().append('g')
 				.classed('label', true)

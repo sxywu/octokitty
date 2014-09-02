@@ -36,7 +36,8 @@ define([
 					owner: d.owner, 
 					repo: d.repo,
 					x: (d.repo ? repoSize : contributorSize) + 5,
-					y: 0
+					y: 0,
+					text: d.owner + (d.repo ? '/' + d.repo : '')
 				};
 			})
 			.classed({'label': true, 'hide': true})
