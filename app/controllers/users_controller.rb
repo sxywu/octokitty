@@ -71,6 +71,15 @@ class UsersController < ApplicationController
             c
           end
         end
+      else
+        # if the repo doesn't have any contributors 
+        # first delete references to the contribution in user and repo 
+        # then delete contribution
+        # then delete the repo
+        repo.contributions.delete(repo.contributions.first)
+        user.contributions.delete(contribution)
+        contribution.destroy
+        repo.destroy
       end
 
     end
