@@ -32,10 +32,6 @@ define([
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 			$('.search').click(_.bind(this.search, this));
 
-			// this.getUser();
-
-			// $.get('users/emeeks', function(response) {console.log(response)});
-
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
 			$(window).scroll(_.bind(this.scrollLabel, this));
@@ -75,16 +71,12 @@ define([
 
 			$('.submitUser').blur();
 
-			// user = 'enjalot';
-
-			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
 			this.showSomething(['loading', 'popularity']);
 			this.disableSomething(['inputUser', 'submitUser']);
 			$('.progress-bar').css('width', '10%');
-			// this.getData(user);
 
-			$.get('users/emeeks', function(response) {
+			$.get('users/' + user, function(response) {
 				that.users = response.users;
 				that.repos = response.repos;
 				that.contributors = _.chain(response.commits)
@@ -95,137 +87,6 @@ define([
 				that.render();
 			});
 
-		},
-		getData: function(user, end) {
-			var that = this,
-				name = 'user:' + user,
-				url = '/users/' + user + '/repos',
-				numRepos = 5,
-				numContributors = 5,
-				callback = function(data) {
-					// update loading indicator
-					$('.progress-bar').css('width', '25%');
-
-					that.data[name] = data;
-
-					// after all repos are loaded, and the contributors are calculated for this user
-					// go and get the information of everyone in the contributors array
-					var allReposLoaded = _.after(Math.min(data.length, numRepos), function() {
-						if (!end) {
-							var allUsersLoaded = _.after(that.contributors.length, _.bind(that.getCommits, that));
-							_.each(that.contributors, function(contributor) {
-								that.getData(contributor, allUsersLoaded);
-							})
-						} else {
-							end();
-						}
-					});
-					// sort the repos by "popularity", and then query the endpoint to see
-					// if there are any contributors.  If there are, add the repo to the repos array
-					_.chain(data).sortBy(function(repo) {
-						return -(repo.watches + repo.stars + repo.forks);
-					}).first(numRepos).each(function(repo) {
-						name = 'repo:' +  repo.name;
-						if (that.validate(repo.owner) && that.validate(repo.name)) {
-							url = '/repos/' + repo.owner + '/' + repo.name + '/contributors';
-							callback = function(data) {
-								name = 'repo:' +  repo.name;
-								that.data[name] = data;
-
-								var contributors = _.chain(data)
-									.filter(function(contributor) {
-										return contributor.author !== repo.owner && contributor.contributions > 5;
-									}).first(numContributors).map(function(contributor) {
-										if (!end && !_.contains(that.contributors, contributor.author)) {
-											// make sure contributor isn't already in the array
-											that.contributors.push(contributor.author);
-										}
-										return contributor.author;
-									}).value();
-								if (contributors.length) {
-									contributors.push(repo.owner)
-									repo.contributors = contributors;
-									that.repos.push(repo);
-								}
-								allReposLoaded();
-							};
-
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
-						} else {
-							allReposLoaded();
-						}
-					});
-				};
-
-			callback($.parseJSON(localStorage[name]))
-			// if (that.data[name]) {
-			// 	callback(that.data[name]);
-			// } else {
-			// 	$.get(url, callback);	
-			// }
-		},
-		/**
-		for each of the contributors in a repo, get only their commits to that repo.
-		once we have all the data, call render.
-		*/
-		getCommits: function() {
-			if (this.repos.length) {
-				// update loading indicator
-				$('.progress-bar').css('width', '50%');
-
-				var numCommits = _.reduce(this.repos, function(memo, repo) {return memo + repo.contributors.length}, 0),
-					allCommitsLoaded = _.after(numCommits, _.bind(this.render, this)),
-					name,
-					url,
-					callback,
-					that = this;
-
-				this.contributors = {};
-				_.each(this.repos, function(repo) {
-					_.each(repo.contributors, function(contributor) {
-						name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-						if (that.validate(repo.owner) && that.validate(repo.name) && that.validate(contributor)) {
-							url = '/repos/' + repo.owner + '/' + repo.name + '/commits/' + contributor;
-							callback = function(data) {
-								name = 'commit:' + repo.owner + '/' + repo.name + '/' + contributor;
-								_.each(data, function(commit) {
-									commit.owner = repo.owner;
-									commit.repo = repo.name;
-								});
-								that.data[name] = data;
-
-								if (that.contributors[contributor]) {
-									that.contributors[contributor].push(data);
-								} else {
-									that.contributors[contributor] = data;
-								}
-
-								allCommitsLoaded();
-							};
-
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
-						} else {
-							allCommitsLoaded();
-						}
-					});
-				});
-
-			} else {
-				// give "sorry you don't really have contributors for your top repos *sadface*" error message
-			}
-		},
-		validate: function(string) {
-			return string && _.indexOf(string, ' ') === -1 && _.indexOf(string, '.') === -1;
 		},
 		render: function() {
 			debugger
