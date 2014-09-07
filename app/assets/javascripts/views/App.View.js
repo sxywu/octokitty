@@ -30,12 +30,20 @@ define([
 
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
+			$('.search').click(_.bind(this.search, this));
 
-			this.getUser();
+			// this.getUser();
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
 			$(window).scroll(_.bind(this.scrollLabel, this));
+		},
+		search: function() {
+			if ($('.inputUser').hasClass('hide')) {
+				this.showSomething('inputUser');
+			} else {
+				this.showSomething('weekWrapper');
+			}
 		},
 		keydown: function(e) {
 			var key = e.which || e.keyCode,
@@ -64,7 +72,7 @@ define([
 
 			$('.submitUser').blur();
 
-			user = 'enjalot';
+			// user = 'enjalot';
 
 			if (!this.validate(user)) return; // give warning
 			if (!this.data || (this.data && !this.data['user:' + user])) this.data = {};
@@ -127,24 +135,24 @@ define([
 								allReposLoaded();
 							};
 
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
+							// callback($.parseJSON(localStorage[name]))
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
 
-			callback($.parseJSON(localStorage[name]))
-			// if (that.data[name]) {
-			// 	callback(that.data[name]);
-			// } else {
-			// 	$.get(url, callback);	
-			// }
+			// callback($.parseJSON(localStorage[name]))
+			if (that.data[name]) {
+				callback(that.data[name]);
+			} else {
+				$.get(url, callback);	
+			}
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
@@ -185,12 +193,12 @@ define([
 								allCommitsLoaded();
 							};
 
-							callback($.parseJSON(localStorage[name]))
-							// if (that.data[name]) {
-							// 	callback(that.data[name]);
-							// } else {
-							// 	$.get(url, callback);	
-							// }
+							// callback($.parseJSON(localStorage[name]))
+							if (that.data[name]) {
+								callback(that.data[name]);
+							} else {
+								$.get(url, callback);	
+							}
 						} else {
 							allCommitsLoaded();
 						}
@@ -214,7 +222,7 @@ define([
 				this.calculateGraph();
 
 				$('.progress-bar').css('width', '100%');
-				this.showSomething(['timelineWrapper', 'summary']);
+				this.showSomething(['timelineWrapper', 'summary', 'weekWrapper']);
 				this.enableSomething(['inputUser', 'submitUser']);
 
 				// empty everything bc i'm lazy
