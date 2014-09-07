@@ -12,10 +12,9 @@ class Commit < ActiveRecord::Base
   	repo = Repo.find(self.repo_id)
     commits = client.get_commits("#{self.owner}"+"/"+"#{repo.name}", {:author => "#{self.contributor}", :per_page => 100})
 
-    self.data = commits
-
+    self.data = commits.to_json
     self.save
-    
+
   end
 
 end

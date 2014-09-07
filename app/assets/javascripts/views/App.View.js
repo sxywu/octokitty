@@ -34,7 +34,7 @@ define([
 
 			// this.getUser();
 
-			$.get('users/emeeks', function() {});
+			$.get('users/emeeks', function(response) {console.log(response)});
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
