@@ -6,10 +6,13 @@
 		  	<a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">log me in
 		  	</a>
 		  </h4>
+		 <% else %>
+		 	<h4 class="search glyphicon glyphicon-search"></h4>
+		 	<h4 class="glyphicon glyphicon-cog"></h4>
 		 <% end %>
 	</div>
 	<div class="middle">
-		<h3 class="hide">Week of <span class="week"></span></h3>
+		<h3 class="hide weekWrapper">Week of <span class="week"></span></h3>
         <input class="inputUser form-control input-lg <% if session[:access_token] == nil %>hide<% end %>" type="text" placeholder="enter github username"> 
     </div>
 	<div class="right">
