@@ -32,7 +32,7 @@ class UsersController < ApplicationController
       # fetch all commits by contributors to repo
       repo.contributions.each do |contribution|
         commit = Commit.find_by_contributor_and_repo_id(contribution.contributor, contribution.repo_id)
-        p commit
+        commit.fetch
       end
 
     end

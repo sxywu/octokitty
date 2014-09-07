@@ -31,6 +31,7 @@ class Repo < ActiveRecord::Base
 
 			if not Commit.find_by_contributor_and_repo_id(user.username, self.id)
 				commit = Commit.create(
+					owner: self.owner,
 					contributor: user.username,
 					repo_id: self.id
 				)
@@ -41,6 +42,7 @@ class Repo < ActiveRecord::Base
     # create commit for owner also
     if not Commit.find_by_contributor_and_repo_id(self.owner, self.id)
 	    commit = Commit.create(
+	    	owner: self.owner,
 			contributor: self.owner,
 			repo_id: self.id
 		)
