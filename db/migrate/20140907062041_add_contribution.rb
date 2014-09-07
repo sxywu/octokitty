@@ -3,6 +3,7 @@ class AddContribution < ActiveRecord::Migration
     create_table :contributions do |t|
       t.string :contributor
       t.belongs_to :repo
+      t.boolean :owns
       t.timestamps
     end
   end
