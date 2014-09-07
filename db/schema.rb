@@ -15,6 +15,7 @@ ActiveRecord::Schema.define(:version => 20140907062041) do
 
   create_table "commits", :force => true do |t|
     t.string   "contributor"
+    t.string   "owner"
     t.integer  "repo_id"
     t.text     "data"
     t.datetime "created_at",  :null => false
@@ -24,6 +25,7 @@ ActiveRecord::Schema.define(:version => 20140907062041) do
   create_table "contributions", :force => true do |t|
     t.string   "contributor"
     t.integer  "repo_id"
+    t.boolean  "owns"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
