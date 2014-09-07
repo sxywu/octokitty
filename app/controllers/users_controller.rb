@@ -29,6 +29,12 @@ class UsersController < ApplicationController
       repo = Repo.find(contribution.repo_id)
       repo.fetch
 
+      # fetch all commits by contributors to repo
+      repo.contributions.each do |contribution|
+        commit = Commit.find_by_contributor_and_repo_id(contribution.contributor, contribution.repo_id)
+        p commit
+      end
+
     end
   end
   helper_method :fetch_user_repos

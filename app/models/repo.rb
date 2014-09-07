@@ -21,19 +21,30 @@ class Repo < ActiveRecord::Base
     	contribs.each do |contrib|
 			user = User.find_by_username(contrib[:author])
 			if not user
-				User.create(username: contrib[:author])
+				user = User.create(username: contrib[:author])
 			end
 
 			# for each of users, add repo to contributions
-			user.contributions << Contribution.create(repo_id: self.id, owns: false)
+			if not Contribution.find_by_contributor_and_repo_id(user.username, self.id)
+				user.contributions << Contribution.create(repo_id: self.id, owns: false)
+			end
 
-			# no need to check if commit exists, since all deleted at end
-			commit = Commit.create(
-				contributor: contrib[:author],
-				repo_id: self.id
-			)
+			if not Commit.find_by_contributor_and_repo_id(user.username, self.id)
+				commit = Commit.create(
+					contributor: user.username,
+					repo_id: self.id
+				)
+			end
     	end
     end
+
+    # create commit for owner also
+    if not Commit.find_by_contributor_and_repo_id(self.owner, self.id)
+	    commit = Commit.create(
+			contributor: self.owner,
+			repo_id: self.id
+		)
+	end
 
   end
 
