@@ -25,9 +25,10 @@ class UsersController < ApplicationController
 
   private
   def fetch_user_repos(user)
-    user.contributions.each do |contribution|
+    user.contributions.where(:owns => true).each do |contribution|
       repo = Repo.find(contribution.repo_id)
       repo.fetch
+
     end
   end
   helper_method :fetch_user_repos

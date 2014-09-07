@@ -24,6 +24,9 @@ class Repo < ActiveRecord::Base
 				User.create(username: contrib[:author])
 			end
 
+			# for each of users, add repo to contributions
+			user.contributions << Contribution.create(repo_id: self.id, owns: false)
+
 			# no need to check if commit exists, since all deleted at end
 			commit = Commit.create(
 				contributor: contrib[:author],

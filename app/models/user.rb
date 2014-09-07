@@ -36,7 +36,7 @@ class User < ActiveRecord::Base
     	else 
     		# for each repo, first create repo if it doesn't already exist
     		repo = Repo.create(repo_obj)
-    		self.contributions << Contribution.create(repo_id: repo.id)
+    		self.contributions << Contribution.create(repo_id: repo.id, owns: true)
     	end
     end
   end
