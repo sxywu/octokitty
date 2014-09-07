@@ -280,7 +280,7 @@ define([
 				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
 			});
 			var maxWeight = _.max(this.links, function(link) {return link.total}).total;
-			this.linkScale = d3.scale.linear().domain([0, maxWeight]).range([0, 8]);
+			this.linkScale = d3.scale.linear().domain([1, maxWeight]).range([1, 8]);
 
 			this.commitsByWeek = _.chain(this.commits).groupBy(function(commit) {return commit.y}).values().value();
 
