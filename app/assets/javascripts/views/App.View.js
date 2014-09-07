@@ -34,7 +34,7 @@ define([
 
 			// this.getUser();
 
-			$.get('users/emeeks', function(response) {console.log(response)});
+			// $.get('users/emeeks', function(response) {console.log(response)});
 
 			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			$(window).scroll(windowScroll);
@@ -68,7 +68,8 @@ define([
 			$commitSHA.toggleClass('hide');
 		},
 		getUser: function() {
-			var user = $('.inputUser').val();
+			var user = $('.inputUser').val(),
+				that = this;
 			this.repos = [];
 			this.contributors = [];
 
@@ -81,7 +82,19 @@ define([
 			this.showSomething(['loading', 'popularity']);
 			this.disableSomething(['inputUser', 'submitUser']);
 			$('.progress-bar').css('width', '10%');
-			this.getData(user);
+			// this.getData(user);
+
+			$.get('users/emeeks', function(response) {
+				that.users = response.users;
+				that.repos = response.repos;
+				that.contributors = _.chain(response.commits)
+					.flatten()
+					.groupBy(function(commit) {return commit.author})
+					.value();
+
+				that.render();
+			});
+
 		},
 		getData: function(user, end) {
 			var that = this,
@@ -137,24 +150,24 @@ define([
 								allReposLoaded();
 							};
 
-							// callback($.parseJSON(localStorage[name]))
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allReposLoaded();
 						}
 					});
 				};
 
-			// callback($.parseJSON(localStorage[name]))
-			if (that.data[name]) {
-				callback(that.data[name]);
-			} else {
-				$.get(url, callback);	
-			}
+			callback($.parseJSON(localStorage[name]))
+			// if (that.data[name]) {
+			// 	callback(that.data[name]);
+			// } else {
+			// 	$.get(url, callback);	
+			// }
 		},
 		/**
 		for each of the contributors in a repo, get only their commits to that repo.
@@ -195,12 +208,12 @@ define([
 								allCommitsLoaded();
 							};
 
-							// callback($.parseJSON(localStorage[name]))
-							if (that.data[name]) {
-								callback(that.data[name]);
-							} else {
-								$.get(url, callback);	
-							}
+							callback($.parseJSON(localStorage[name]))
+							// if (that.data[name]) {
+							// 	callback(that.data[name]);
+							// } else {
+							// 	$.get(url, callback);	
+							// }
 						} else {
 							allCommitsLoaded();
 						}
@@ -215,6 +228,7 @@ define([
 			return string && _.indexOf(string, ' ') === -1 && _.indexOf(string, '.') === -1;
 		},
 		render: function() {
+			debugger
 			if (_.values(this.contributors).length) {
 				// update loading indicator
 				$('.progress-bar').css('width', '75%');

@@ -56,7 +56,7 @@ class UsersController < ApplicationController
           stars: repo.stars,
           watches: repo.watches,
           forks: repo.forks,
-          contributors: repo.contributions.where(:owns => false).map{|contribution| contribution.contributor}
+          contributors: repo.contributions.map{|contribution| contribution.contributor}
         }
 
         # fetch all commits by contributors to repo
