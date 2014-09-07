@@ -14,7 +14,6 @@ class User < ActiveRecord::Base
 
   	get_repos
 
-
     self.save
 
   end
@@ -33,7 +32,7 @@ class User < ActiveRecord::Base
     repos.each do |repo_obj|
     	repo = Repo.find_by_owner_and_name(repo_obj[:owner], repo_obj[:name])
     	if repo
-    		self.contributions << Contribution.create(repo_id: repo.id)
+    		
     	else 
     		# for each repo, first create repo if it doesn't already exist
     		repo = Repo.create(repo_obj)
