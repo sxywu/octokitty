@@ -2,13 +2,29 @@ class UsersController < ApplicationController
   include ApplicationHelper
 
   def show
-    username = params[:username]
-    user = User.find_by_username(username)
     json = {}
     json[:users] = []
     json[:repos] = []
     json[:commits] = []
 
+    username = params[:username]
+    user = fetch_user(username, json)
+
+    user.contributions.where(:owns => true).each do |contribution|
+      # find all repos user owns
+      Repo.find(contribution.repo_id).contributions.where(:owns => false).each do |contribution|
+        # find all contributors to the repo
+        fetch_user(contribution.contributor, json)
+      end
+    end
+
+    render :json => json
+  end
+
+  private
+  def fetch_user(username, json)
+    user = User.find_by_username(username)
+    
     if user
       # user already exists
       user.fetch
@@ -25,10 +41,9 @@ class UsersController < ApplicationController
       fetch_user_repos(user, json)
     end
 
-    render :json => json
+    return user
   end
 
-  private
   def fetch_user_repos(user, json)
     user.contributions.where(:owns => true).each do |contribution|
       repo = Repo.find(contribution.repo_id)
@@ -50,6 +65,6 @@ class UsersController < ApplicationController
 
     end
   end
-  helper_method :fetch_user_repos
+  helper_method :fetch_user, :fetch_user_repos
 
 end
