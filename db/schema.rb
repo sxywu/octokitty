@@ -14,18 +14,18 @@
 ActiveRecord::Schema.define(:version => 20140907062041) do
 
   create_table "commits", :force => true do |t|
-    t.string   "owner"
+    t.string   "contributor"
     t.integer  "repo_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.text     "data"
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
   end
 
   create_table "contributions", :force => true do |t|
-    t.string   "owner"
+    t.string   "contributor"
     t.integer  "repo_id"
-    t.text     "data"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
   end
 
   create_table "delayed_jobs", :force => true do |t|
@@ -45,20 +45,18 @@ ActiveRecord::Schema.define(:version => 20140907062041) do
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
 
   create_table "repos", :force => true do |t|
-    t.string   "name",          :null => false
-    t.string   "owner",         :null => false
-    t.integer  "star_count"
-    t.integer  "fork_count"
-    t.integer  "watcher_count"
-    t.datetime "created_at",    :null => false
-    t.datetime "updated_at",    :null => false
+    t.string   "name",       :null => false
+    t.string   "owner"
+    t.integer  "stars"
+    t.integer  "forks"
+    t.integer  "watches"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "users", :id => false, :force => true do |t|
     t.string   "username",                    :null => false
-    t.integer  "star_count"
-    t.integer  "fork_count"
-    t.integer  "watch_count"
+    t.integer  "followers"
     t.integer  "search_count", :default => 0
     t.datetime "created_at",                  :null => false
     t.datetime "updated_at",                  :null => false
