@@ -3,6 +3,7 @@ class AddCommit < ActiveRecord::Migration
     create_table :commits do |t|
       t.string :contributor
       t.belongs_to :repo
+      t.text :data
       t.timestamps
     end
   end
