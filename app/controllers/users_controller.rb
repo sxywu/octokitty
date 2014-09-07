@@ -48,19 +48,26 @@ class UsersController < ApplicationController
     user.contributions.where(:owns => true).each do |contribution|
       repo = Repo.find(contribution.repo_id)
       repo.fetch
-      json[:repos] << repo
+      json[:repos] << {
+        owner: repo.owner,
+        name: repo.name,
+        stars: repo.stars,
+        watches: repo.watches,
+        forks: repo.forks,
+        contributors: repo.contributions.where(:owns => false).map{|contribution| contribution.contributor}
+      }
 
       # fetch all commits by contributors to repo
       repo.contributions.each do |contribution|
         commit = Commit.find_by_contributor_and_repo_id(contribution.contributor, contribution.repo_id)
         commit.fetch
 
-        json[:commits] << {
-          owner: commit.owner,
-          author: commit.contributor,
-          repo: repo.name,
-          commits: JSON.parse(commit.data)
-        }
+        json[:commits] << JSON.parse(commit.data).map do |c|
+          c[:repo] = repo.name
+          c[:owner] = repo.owner
+          
+          c
+        end
       end
 
     end
