@@ -1,3 +1,30 @@
+<div class="topPanel">
+	<div class="left">
+		<h1>Octokitten</h1>
+		<% if session[:access_token] == nil %>
+		  <h4>
+		  	<a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">log me in
+		  	</a>
+		  </h4>
+		 <% else %>
+		 	<h4 class="search glyphicon glyphicon-search"></h4>
+		 	<h4 class="glyphicon glyphicon-cog"></h4>
+		 <% end %>
+	</div>
+	<div class="middle">
+		<h3 class="hide weekWrapper">Week of <span class="week">Kitties</span></h3>
+        <input class="inputUser form-control input-lg <% if session[:access_token] == nil %>hide<% end %>" type="text" placeholder="enter github username"> 
+    </div>
+	<div class="right">
+		<span class="share">
+			<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://octokitten.herokuapp.com/" data-text="Relationship between @github users, repos, and contributors by @shirleyxywu @pinkarrison #dataviz"></a>
+			<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+			<iframe src="http://ghbtns.com/github-btn.html?user=sxywu&repo=octokitty&type=watch&count=true"
+  allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+		</span>
+	</div>
+</div>
+
 <div class="leftPanel">
 	<div class="explanation">
 		<h3>devs and repos and contributors, oh my!</h3>
@@ -35,53 +62,25 @@
 </div>
 
 <div class="rightPanel">
-
-	<div class="title">
-		<h1>octokitten</h1>
-		<span class="share">
-			<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://octokitten.herokuapp.com/" data-text="Relationship between @github users, repos, and contributors by @shirleyxywu @pinkarrison #dataviz"></a>
-			<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-		</span>
+	<div class="popularity">
+		<h3>most <span class="heart glyphicon glyphicon-heart"></span>'d users:</h3>
+		<table class="table table-hover">
+			<% @popular_users.each_with_index do |user, i| %>
+				<tr>
+					<td><%= i + 1 %>.</td>
+					<td><%= user[:username] %></td>
+					<td class="userSearches">
+						<%= user[:count] %> 
+						<span class="heart glyphicon glyphicon-heart"></span>
+					</td>
+				</tr>
+			<% end %>
+		</table>
 	</div>
-	<div class="searchbar">
-		<% if session[:access_token] == nil %>
-		  <h4>
-		  	<a href="https://github.com/login/oauth/authorize?client_id=<%= @client_id %>">log me in
-		  	 <span class="glyphicon glyphicon-log-in"></span>
-		  	</a>
-		  </h4>
-		 <% else %>
-		 	<div class="input-group">
-		      <input class="inputUser form-control input-lg" type="text" placeholder="enter github username">
-		      <span class="input-group-btn">
-		        <button class="submitUser btn btn-default  btn-lg" type="button">hit me!</button>
-		      </span>
-		    </div>
-		 <% end %>
-	 </div>
 
-	<div class="content">
-		<div class="popularity">
-			<h3>most <span class="heart glyphicon glyphicon-heart"></span>'d users:</h3>
-			<table class="table table-hover">
-				<% @popular_users.each_with_index do |user, i| %>
-					<tr>
-						<td><%= i + 1 %>.</td>
-						<td><%= user[:username] %></td>
-						<td class="userSearches">
-							<%= user[:count] %> 
-							<span class="heart glyphicon glyphicon-heart"></span>
-						</td>
-					</tr>
-				<% end %>
-			</table>
-		</div>
-
-		<div class="summary hide">
-			<h3>Week of <span class="week"></span>:</h3>
-			<svg class="graph"></svg>
-			<div class="commitData"></div>
-		</div>
+	<div class="summary hide">
+		<svg class="graph"></svg>
+		<div class="commitData"></div>
 	</div>
 
 </div>
