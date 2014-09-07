@@ -67,7 +67,8 @@ class ApiClient
   def parse_repos(repos)
     if repos.class == Array
       parsed_repos = repos.map do |repo|
-        repo = {owner: repo.owner.login,
+        repo = {
+          owner: repo.owner.login,
           name: repo.name,
           watches: repo.watchers_count,
           stars: repo.stargazers_count,
