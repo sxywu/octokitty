@@ -58,6 +58,7 @@ top bar
 
 .topPanel .right .share * {
 	vertical-align: middle;
+	margin-right: -20px;
 }
 
 .topPanel .middle {
