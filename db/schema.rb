@@ -11,13 +11,57 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140824005629) do
+ActiveRecord::Schema.define(:version => 20140907062041) do
 
-  create_table "search_counts", :force => true do |t|
-    t.string   "username",                  :null => false
-    t.integer  "count",      :default => 0
+  create_table "commits", :force => true do |t|
+    t.string   "owner"
+    t.integer  "repo_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  create_table "contributions", :force => true do |t|
+    t.string   "owner"
+    t.integer  "repo_id"
+    t.text     "data"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  create_table "delayed_jobs", :force => true do |t|
+    t.integer  "priority",   :default => 0, :null => false
+    t.integer  "attempts",   :default => 0, :null => false
+    t.text     "handler",                   :null => false
+    t.text     "last_error"
+    t.datetime "run_at"
+    t.datetime "locked_at"
+    t.datetime "failed_at"
+    t.string   "locked_by"
+    t.string   "queue"
     t.datetime "created_at",                :null => false
     t.datetime "updated_at",                :null => false
+  end
+
+  add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
+
+  create_table "repos", :force => true do |t|
+    t.string   "name",          :null => false
+    t.string   "owner",         :null => false
+    t.integer  "star_count"
+    t.integer  "fork_count"
+    t.integer  "watcher_count"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+  end
+
+  create_table "users", :id => false, :force => true do |t|
+    t.string   "username",                    :null => false
+    t.integer  "star_count"
+    t.integer  "fork_count"
+    t.integer  "watch_count"
+    t.integer  "search_count", :default => 0
+    t.datetime "created_at",                  :null => false
+    t.datetime "updated_at",                  :null => false
   end
 
 end
