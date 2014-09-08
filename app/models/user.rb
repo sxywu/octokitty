@@ -12,6 +12,8 @@ class User < ActiveRecord::Base
   def perform
   	increment_user
 
+    return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+
   	get_repos
 
     self.save
@@ -30,15 +32,12 @@ class User < ActiveRecord::Base
     repos = repos.sort_by {|repo| -(repo[:stars] + repo[:watches] + repo[:forks])}.first(5)
 
     repos.each do |repo_obj|
-    	repo = Repo.find_by_owner_and_name(repo_obj[:owner], repo_obj[:name])
-    	if repo
-    		# if it already exists, update only if last fetch was 30 days ago
-    	else 
+    	if not Repo.exists?(:owner => repo_obj[:owner], :name => repo_obj[:name])
     		# for each repo, first create repo if it doesn't already exist
     		repo = Repo.create(repo_obj)
 
-    		if not Contribution.find_by_contributor_and_repo_id(self.username, repo.id)
-				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
+        if not Contribution.exists?(:contributor => self.username, :repo_id => repo.id)
+  				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
     		end
     		
     	end
