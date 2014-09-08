@@ -8,7 +8,8 @@ class Repo < ActiveRecord::Base
   	perform
   end
 
-  def perform
+  def perform	
+
   	client = ApiClient.new
     contribs = client.get_contribs("#{self.owner}"+"/"+"#{self.name}", anon=nil, {:per_page => 100})
 
@@ -17,38 +18,39 @@ class Repo < ActiveRecord::Base
     contribs = contribs.sort_by {|contributor| contributor[:contributions]}.first(5)
 
     if not contribs.empty?
-    	# if not empty, loop through contribs array and find corresponding user
+    	# if not empty, loop through each contributor and add them
     	contribs.each do |contrib|
-			user = User.find_by_username(contrib[:author])
-			if not user
-				user = User.create(username: contrib[:author])
-			end
-
-			# for each of users, add repo to contributions
-			if not Contribution.find_by_contributor_and_repo_id(user.username, self.id)
-				user.contributions << Contribution.create(repo_id: self.id, owns: false)
-			end
-
-			if not Commit.find_by_contributor_and_repo_id(user.username, self.id)
-				commit = Commit.create(
-					owner: self.owner,
-					contributor: user.username,
-					repo_id: self.id
-				)
-			end
+    		user = add_contributor(contrib)
+    		add_commit(self.owner, user.username, self.id)
     	end
     end
 
     # create commit for owner also
-    if not Commit.find_by_contributor_and_repo_id(self.owner, self.id)
-	    commit = Commit.create(
-	    	owner: self.owner,
-			contributor: self.owner,
-			repo_id: self.id
-		)
-	end
+    add_commit(self.owner, self.owner, self.id)
 
   end
 
+  def add_contributor(contrib)
+  	user = User.find_by_username(contrib[:author])
+	if not user
+		user = User.create(username: contrib[:author])
+	end
 
+	# for each of users, add repo to contributions
+	if not Contribution.exists?(:contributor => user.username, :repo_id => self.id)
+		user.contributions << Contribution.create(repo_id: self.id, owns: false)
+	end
+
+	return user
+  end
+
+  def add_commit(owner, contributor, repo_id)
+  	if not Commit.exists?(:contributor => contributor, :repo_id => repo_id)
+		commit = Commit.create(
+			owner: owner,
+			contributor: contributor,
+			repo_id: repo_id
+		)
+	end
+  end
 end
