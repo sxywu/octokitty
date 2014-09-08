@@ -17,7 +17,7 @@ class Repo < ActiveRecord::Base
 
     # sort contributors by number of contributions to repo
     contribs = contribs.select {|contributor| contributor[:author] != self.owner and contributor[:contributions] >= 5}
-    contribs = contribs.sort_by {|contributor| contributor[:contributions]}.first(5)
+    contribs = contribs.sort_by {|contributor| -contributor[:contributions]}.first(5)
 
     if not contribs.empty?
     	# if not empty, loop through each contributor and add them
