@@ -55,4 +55,15 @@ class Repo < ActiveRecord::Base
 		)
 	end
   end
+
+  def parse_for_render
+  	return {
+          owner: self.owner,
+          name: self.name,
+          stars: self.stars,
+          watches: self.watches,
+          forks: self.forks,
+          contributors: self.contributions.map{|contribution| contribution.contributor}
+        }
+  end
 end

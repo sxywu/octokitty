@@ -50,26 +50,14 @@ class UsersController < ApplicationController
       repo.fetch
 
       if repo.contributions.count > 1
-        json[:repos] << {
-          owner: repo.owner,
-          name: repo.name,
-          stars: repo.stars,
-          watches: repo.watches,
-          forks: repo.forks,
-          contributors: repo.contributions.map{|contribution| contribution.contributor}
-        }
+        json[:repos] << repo.parse_for_render
 
         # fetch all commits by contributors to repo
         repo.contributions.each do |contribution|
           commit = Commit.find_by_contributor_and_repo_id(contribution.contributor, contribution.repo_id)
           commit.fetch
 
-          json[:commits] << JSON.parse(commit.data).map do |c|
-            c[:repo] = repo.name
-            c[:owner] = repo.owner
-
-            c
-          end
+          json[:commits] << commit.parse_for_render
         end
       else
         # if the repo doesn't have any contributors 

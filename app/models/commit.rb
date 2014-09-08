@@ -31,7 +31,16 @@ class Commit < ActiveRecord::Base
       self.data = commits.to_json
       self.save
     end
-  	
+  end
+
+  def parse_for_render
+    repo = Repo.find(self.repo_id)
+    return JSON.parse(self.data).map do |c|
+      c[:repo] = repo.name
+      c[:owner] = repo.owner
+
+      c
+    end
   end
 
 end
