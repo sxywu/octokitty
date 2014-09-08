@@ -8,13 +8,30 @@ class Commit < ActiveRecord::Base
   end
 
   def perform
-  	client = ApiClient.new
-  	repo = Repo.find(self.repo_id)
-    commits = client.get_commits("#{self.owner}"+"/"+"#{repo.name}", {:author => "#{self.contributor}", :per_page => 100})
+    client = ApiClient.new
+    repo = Repo.find(self.repo_id)
+    if self.data
+      commits = client.get_commits("#{self.owner}"+"/"+"#{repo.name}", {
+        :author => "#{self.contributor}", 
+        :since => self.updated_at,
+        :per_page => 100
+      })
 
-    self.data = commits.to_json
-    self.save
+      if commits.count > 0
+        # concatenate old array of commits with new
+        commits = JSON.parse(self.data) + commits
+        self.data = commits.to_json
+      end
+    else
+      commits = client.get_commits("#{self.owner}"+"/"+"#{repo.name}", {
+        :author => "#{self.contributor}", 
+        :per_page => 100
+      })
 
+      self.data = commits.to_json
+      self.save
+    end
+  	
   end
 
 end
