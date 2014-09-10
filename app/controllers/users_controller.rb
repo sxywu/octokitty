@@ -2,12 +2,14 @@ class UsersController < ApplicationController
   include ApplicationHelper
 
   def show
-    response = Response.find_by_username(params[:username])
+    username = params[:username]
+    response = Response.find_by_username(username)
     if not response
-      response = Response.create(username: params[:username])
+      response = Response.create(username: username)
+      response.perform
     end
-    response.fetch
-    render :json => {}
+
+    render :json => response
 
   end
 

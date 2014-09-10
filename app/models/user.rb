@@ -12,7 +12,7 @@ class User < ActiveRecord::Base
   def perform
   	increment_user
 
-    return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
   	get_repos
 
@@ -39,7 +39,7 @@ class User < ActiveRecord::Base
         if not Contribution.exists?(:contributor => self.username, :repo_id => repo.id)
   				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
     		end
-    		
+
     	end
     end
   end

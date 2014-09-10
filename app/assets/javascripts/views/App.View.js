@@ -76,20 +76,51 @@ define([
 			this.disableSomething(['inputUser', 'submitUser']);
 			$('.progress-bar').css('width', '10%');
 
-			$.get('users/' + user, function(response) {
-				that.users = response.users;
-				that.repos = response.repos;
-				that.contributors = _.chain(response.commits)
+			$.ajax({
+			url: '/users/' + user,
+			method: 'GET',
+			}).success(function(data){
+				if (data.response) {
+					that.parseResponse(data);
+				} else {
+					that.pollDatabase(user);
+				}
+			})
+		},
+
+		pollDatabase: function(user) {
+			var user = user,
+				that = this;
+
+			setTimeout(function() {
+				$.ajax({
+					url: '/poll/' + user,
+					method: 'GET',
+				}).success(function(data){
+					that.parseResponse(data, user);
+				})
+			}, 1000);
+		},
+		parseResponse: function(data, user) {
+			if (data.response === true) {
+				data.data = $.parseJSON(data.data);
+				debugger
+				this.users = data.data.users;
+				this.repos = data.data.repos;
+				this.contributors = _.chain(data.data.commits)
 					.flatten()
 					.groupBy(function(commit) {return commit.author})
 					.value();
 
-				that.render();
-			});
-
+				this.render();
+			} else if (data.response === false) {
+				console.log("error")
+			} else {
+				console.log("polling db")
+				this.pollDatabase(user);
+			}
 		},
 		render: function() {
-			debugger
 			if (_.values(this.contributors).length) {
 				// update loading indicator
 				$('.progress-bar').css('width', '75%');
@@ -275,6 +306,7 @@ define([
 			});
 
 			_.each(this.commits, function(commit) {
+				debugger
 				that.nodes[commit.author].total += 1;
 				that.nodes[commit.owner + '/' + commit.repo].total += 1;
 				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
@@ -320,7 +352,7 @@ define([
 				.data(_.map(this.sortedRepos, function(repo, i) {
 					var ownerRepo = repo.split('/');
 					return {
-						owner: ownerRepo[0], 
+						owner: ownerRepo[0],
 						repo: ownerRepo[1],
 						x: that.repoScale(repo),
 						y: 15,
@@ -336,7 +368,7 @@ define([
 			if (!this.commitsByWeek) return;
 
 			var top = $(window).scrollTop() + $(window).height() / 3,
-				commits = this.commitsByWeek[this.lastIndex], 
+				commits = this.commitsByWeek[this.lastIndex],
 				node, link,
 				that = this;
 			if (this.lastPos < top) {
@@ -375,7 +407,7 @@ define([
 						this.lastIndex += 1;
 						break;
 					}
-					
+
 					if (this.commitsByWeek[this.lastIndex][0].y < top) {
 						break;
 					} else {
