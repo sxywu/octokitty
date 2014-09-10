@@ -11,6 +11,10 @@ gem 'httparty'
 
 gem 'octokit'
 
+gem "delayed_job_active_record"
+gem "workless", "~> 1.1.3"
+gem "daemons"
+
 gem 'rails_12factor', group: :production
 
 # Gems used only for assets and not required
