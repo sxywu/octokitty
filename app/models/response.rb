@@ -21,6 +21,7 @@ class Response < ActiveRecord::Base
         fetch_user(contribution.contributor, json)
       end
     end
+
     self.data = json.to_json
     self.response = true
     self.save
@@ -43,6 +44,7 @@ class Response < ActiveRecord::Base
     if user
       # user already exists
       user.fetch
+
       json[:users] << user
 
       # after fetching, fetch user's repos
