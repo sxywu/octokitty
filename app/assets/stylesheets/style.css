@@ -125,9 +125,13 @@ right hand side
 }
 
 .graph, .commitData {
-	height: 45%;
+	height: 40%;
 	width: 100%;
 	display: inline-block;
+}
+
+.graph {
+	height: 55%;
 }
 
 .graph {
