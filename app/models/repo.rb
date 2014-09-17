@@ -34,16 +34,16 @@ class Repo < ActiveRecord::Base
 
   def add_contributor(contrib)
   	user = User.find_by_username(contrib[:author])
-	if not user
-		user = User.create(username: contrib[:author])
-	end
+  	if not user
+  		user = User.create(username: contrib[:author])
+  	end
 
-	# for each of users, add repo to contributions
-	if not Contribution.exists?(:contributor => user.username, :repo_id => self.id)
-		user.contributions << Contribution.create(repo_id: self.id, owns: false)
-	end
+  	# for each of users, add repo to contributions
+  	if not Contribution.exists?(:contributor => user.username, :repo_id => self.id)
+  		user.contributions << Contribution.create(repo_id: self.id, owns: false)
+  	end
 
-	return user
+  	return user
   end
 
   def add_commit(owner, contributor, repo_id)

@@ -76,17 +76,29 @@ define([
 			this.disableSomething(['inputUser', 'submitUser']);
 			$('.progress-bar').css('width', '10%');
 
-			$.get('users/' + user, function(response) {
-				that.users = response.users;
-				that.repos = response.repos;
-				that.contributors = _.chain(response.commits)
-					.flatten()
-					.groupBy(function(commit) {return commit.author})
-					.value();
-
-				that.render();
+			$.get('users/' + user, function() {
+				that.pollUser(user);
 			});
 
+		},
+		pollUser: function(user) {
+			var that = this;
+			setTimeout(function() {
+				$.get('users/poll/' + user, function(response) {
+					if (response.response) {
+						that.users = response.users;
+						that.repos = response.repos;
+						that.contributors = _.chain(response.commits)
+							.flatten()
+							.groupBy(function(commit) {return commit.author})
+							.value();
+
+						that.render();
+					} else {
+						that.pollUser(user);
+					}
+				});
+			}, 1000)
 		},
 		render: function() {
 			debugger

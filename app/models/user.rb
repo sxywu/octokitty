@@ -20,6 +20,10 @@ class User < ActiveRecord::Base
 
   end
 
+  def success
+    # get 'users/finished/'
+  end
+
   def increment_user
     self.search_count += 1
   end
