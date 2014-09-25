@@ -3,6 +3,10 @@ class User < ActiveRecord::Base
   has_many :contributions, foreign_key: :contributor, primary_key: :username
   has_many :repos, foreign_key: :owner, primary_key: :username
   has_many :commits, foreign_key: :contributor, primary_key: :username
+
+  has_many :user_responses, foreign_key: :username, primary_key: :username
+  has_many :responses, :through => :user_responses, :uniq => true
+
   attr_accessible :username
 
   def fetch

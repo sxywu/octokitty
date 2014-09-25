@@ -4,6 +4,7 @@ class AddContribution < ActiveRecord::Migration
       t.string :contributor
       t.belongs_to :repo
       t.boolean :owns
+      t.text :commits
       t.timestamps
     end
   end

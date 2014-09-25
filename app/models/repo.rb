@@ -2,13 +2,15 @@ class Repo < ActiveRecord::Base
   belongs_to :user, primary_key: :username, foreign_key: :owner
   has_many :commits
   has_many :contributions
+  has_many :repo_responses
+  has_many :responses, :through => :repo_responses, :uniq => true
   attr_accessible :owner, :name, :watches, :stars, :forks
 
   def fetch
   	perform
   end
 
-  def perform	
+  def perform
   	# if this has been updated in the last 7 days, return
     return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
