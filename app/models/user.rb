@@ -4,7 +4,7 @@ class User < ActiveRecord::Base
   has_many :repos, foreign_key: :owner, primary_key: :username
   has_many :commits, foreign_key: :contributor, primary_key: :username
 
-  has_many :user_responses, foreign_key: :username, primary_key: :username
+  has_many :user_responses, foreign_key: :username, primary_key: :username, :dependent => :destroy
   has_many :responses, :through => :user_responses, :uniq => true
 
   attr_accessible :username
@@ -43,7 +43,7 @@ class User < ActiveRecord::Base
         if not Contribution.exists?(:contributor => self.username, :repo_id => repo.id)
   				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
     		end
-    		
+
     	end
     end
   end
