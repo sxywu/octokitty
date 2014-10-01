@@ -1,10 +1,12 @@
 class Repo < ActiveRecord::Base
-  belongs_to :user, primary_key: :username, foreign_key: :owner
-  has_many :commits
   has_many :contributions
+  has_many :users, :through => :contributions
+
   has_many :repo_responses
   has_many :responses, :through => :repo_responses, :uniq => true
+
   attr_accessible :owner, :name, :watches, :stars, :forks
+
 
   def fetch
   	perform

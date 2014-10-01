@@ -33,6 +33,10 @@ class Commit < ActiveRecord::Base
     end
   end
 
+  def success
+
+  end
+
   def parse_for_render
     repo = Repo.find(self.repo_id)
     return JSON.parse(self.data).map do |c|

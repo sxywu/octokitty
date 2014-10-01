@@ -1,8 +1,7 @@
 class User < ActiveRecord::Base
   set_primary_key :username
   has_many :contributions, foreign_key: :contributor, primary_key: :username
-  has_many :repos, foreign_key: :owner, primary_key: :username
-  has_many :commits, foreign_key: :contributor, primary_key: :username
+  has_many :repos, foreign_key: :owner, primary_key: :username, :through => :contributions
 
   has_many :user_responses, foreign_key: :username, primary_key: :username, :dependent => :destroy
   has_many :responses, :through => :user_responses, :uniq => true
@@ -19,9 +18,15 @@ class User < ActiveRecord::Base
     return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
   	get_repos
-
     self.save
 
+    success
+  end
+
+  def success
+    self.responses.each do |response|
+      response.user_fetched(self)
+    end
   end
 
   def increment_user
@@ -39,10 +44,8 @@ class User < ActiveRecord::Base
     	if not Repo.exists?(:owner => repo_obj[:owner], :name => repo_obj[:name])
     		# for each repo, first create repo if it doesn't already exist
     		repo = Repo.create(repo_obj)
-
-        if not Contribution.exists?(:contributor => self.username, :repo_id => repo.id)
-  				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
-    		end
+        # TODO(swu): figure out how not to duplicate ):
+				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
 
     	end
     end
