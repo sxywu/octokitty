@@ -5,6 +5,8 @@ class AddRepoResponse < ActiveRecord::Migration
       t.belongs_to :response
       t.timestamps
     end
+
+    add_index(:repo_responses, [:repo_id, :response_id], unique: true, name: 'by_repo_response')
   end
 
   def down

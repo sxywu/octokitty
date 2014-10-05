@@ -20,6 +20,8 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.datetime "updated_at",      :null => false
   end
 
+  add_index "contribution_responses", ["contribution_id", "response_id"], :name => "by_contribution_response", :unique => true
+
   create_table "contributions", :force => true do |t|
     t.string   "contributor"
     t.integer  "repo_id"
@@ -28,6 +30,8 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
+
+  add_index "contributions", ["contributor", "repo_id"], :name => "by_contributor_repo", :unique => true
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0, :null => false
@@ -51,6 +55,8 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
+
+  add_index "repo_responses", ["repo_id", "response_id"], :name => "by_repo_response", :unique => true
 
   create_table "repos", :force => true do |t|
     t.string   "name",       :null => false
@@ -77,6 +83,8 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
+
+  add_index "user_responses", ["username", "response_id"], :name => "by_user_response", :unique => true
 
   create_table "users", :id => false, :force => true do |t|
     t.string   "username",                    :null => false

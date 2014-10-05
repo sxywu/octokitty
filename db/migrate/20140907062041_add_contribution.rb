@@ -7,6 +7,8 @@ class AddContribution < ActiveRecord::Migration
       t.text :commits
       t.timestamps
     end
+
+    add_index(:contributions, [:contributor, :repo_id], unique: true, name: 'by_contributor_repo')
   end
 
   def down
