@@ -14,7 +14,7 @@ class Repo < ActiveRecord::Base
 
   def perform
   	# if this has been updated in the last 7 days, return
-    return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
   	client = ApiClient.new
     contribs = client.get_contribs("#{self.owner}"+"/"+"#{self.name}", anon=nil, {:per_page => 100})
@@ -26,38 +26,33 @@ class Repo < ActiveRecord::Base
     if not contribs.empty?
     	# if not empty, loop through each contributor and add them
     	contribs.each do |contrib|
-    		user = add_contributor(contrib)
-    		add_commit(self.owner, user.username, self.id)
+    		add_contributor(contrib)
     	end
     end
 
-    # create commit for owner also
-    add_commit(self.owner, self.owner, self.id)
-
+    success
   end
 
   def add_contributor(contrib)
   	user = User.find_by_username(contrib[:author])
-	if not user
-		user = User.create(username: contrib[:author])
-	end
+  	if not user
+  		user = User.create(username: contrib[:author])
+  	end
 
-	# for each of users, add repo to contributions
-	if not Contribution.exists?(:contributor => user.username, :repo_id => self.id)
-		user.contributions << Contribution.create(repo_id: self.id, owns: false)
-	end
+  	# for each of users, add repo to contributions
+    begin 
+      user.contributions << Contribution.create(repo_id: self.id, owns: false)
+    rescue
+      p 'repo.rb: contribution not unique'
+    end
 
-	return user
+  	return user
   end
 
-  def add_commit(owner, contributor, repo_id)
-  	if not Commit.exists?(:contributor => contributor, :repo_id => repo_id)
-		commit = Commit.create(
-			owner: owner,
-			contributor: contributor,
-			repo_id: repo_id
-		)
-	end
+  def success
+    self.responses.each do |response|
+      response.repo_fetched(self)
+    end
   end
 
   def parse_for_render

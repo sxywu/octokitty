@@ -15,7 +15,7 @@ class User < ActiveRecord::Base
   def perform
   	increment_user
 
-    return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
   	get_repos
     self.save
@@ -23,14 +23,9 @@ class User < ActiveRecord::Base
     success
   end
 
-  def success
-    self.responses.each do |response|
-      response.user_fetched(self)
-    end
-  end
-
   def increment_user
     self.search_count += 1
+    self.save
   end
 
   def get_repos
@@ -49,10 +44,16 @@ class User < ActiveRecord::Base
         begin
   				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
         rescue ActiveRecord::RecordNotUnique => e
-          puts 'contribution not unique'
+          p 'user.rb: contribution not unique'
         end
 
     	end
+    end
+  end
+
+  def success
+    self.responses.each do |response|
+      response.user_fetched(self)
     end
   end
 
