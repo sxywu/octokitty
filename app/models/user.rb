@@ -44,8 +44,13 @@ class User < ActiveRecord::Base
     	if not Repo.exists?(:owner => repo_obj[:owner], :name => repo_obj[:name])
     		# for each repo, first create repo if it doesn't already exist
     		repo = Repo.create(repo_obj)
-        # TODO(swu): figure out how not to duplicate ):
-				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
+
+        # add new contribution if it doesn't exist
+        begin
+  				self.contributions << Contribution.create(repo_id: repo.id, owns: true)
+        rescue ActiveRecord::RecordNotUnique => e
+          puts 'contribution not unique'
+        end
 
     	end
     end

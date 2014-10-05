@@ -22,7 +22,12 @@ class Response < ActiveRecord::Base
       user = User.create(username: username)
     end
 
-    self.users_responses << UserResponse.create(username: username)
+    begin 
+      self.user_responses << UserResponse.create(username: username)
+    rescue ActiveRecord::RecordNotUnique => e
+      puts 'user responses not unique'
+    end
+    
     self.save
 
     user.fetch
