@@ -27,6 +27,7 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.integer  "repo_id"
     t.boolean  "owns"
     t.text     "commits"
+    t.string   "fetched"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
   end
@@ -64,6 +65,7 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.integer  "stars"
     t.integer  "forks"
     t.integer  "watches"
+    t.string   "fetched"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
   end
@@ -72,9 +74,8 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.boolean  "finished"
     t.string   "error"
     t.string   "username"
-    t.text     "outstanding"
-    t.datetime "created_at",  :null => false
-    t.datetime "updated_at",  :null => false
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "user_responses", :force => true do |t|
@@ -90,6 +91,7 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
     t.string   "username",                    :null => false
     t.integer  "followers"
     t.integer  "search_count", :default => 0
+    t.string   "fetched"
     t.datetime "created_at",                  :null => false
     t.datetime "updated_at",                  :null => false
   end

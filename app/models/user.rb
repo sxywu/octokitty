@@ -1,7 +1,7 @@
 class User < ActiveRecord::Base
   set_primary_key :username
-  has_many :contributions, foreign_key: :contributor, primary_key: :username
-  has_many :repos, foreign_key: :owner, primary_key: :username, :through => :contributions
+  has_many :contributions, foreign_key: :contributor, primary_key: :username, :dependent => :destroy
+  has_many :repos, foreign_key: :owner, primary_key: :username, :through => :contributions, :uniq => true
 
   has_many :user_responses, foreign_key: :username, primary_key: :username, :dependent => :destroy
   has_many :responses, :through => :user_responses, :uniq => true
@@ -9,14 +9,17 @@ class User < ActiveRecord::Base
   attr_accessible :username
 
   def fetch
+    increment_user
+
+    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+
+    self.fetched = 'fetching'
+    self.save
+
   	perform
   end
 
   def perform
-  	increment_user
-
-    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
-
   	get_repos
     self.save
 
@@ -52,6 +55,9 @@ class User < ActiveRecord::Base
   end
 
   def success
+    self.fetched = 'success'
+    self.save
+
     self.responses.each do |response|
       response.user_fetched(self)
     end

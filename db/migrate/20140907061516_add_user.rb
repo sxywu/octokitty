@@ -4,6 +4,7 @@ class AddUser < ActiveRecord::Migration
       t.string :username, null: false
       t.integer :followers
       t.integer :search_count, default: 0
+      t.string :fetched
       t.timestamps
     end
     execute "ALTER TABLE users ADD PRIMARY KEY (username);"

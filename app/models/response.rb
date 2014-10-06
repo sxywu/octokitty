@@ -15,6 +15,7 @@ class Response < ActiveRecord::Base
   end
 
   def perform
+
   	username = self.username
   	user = User.find_by_username(username)
     
@@ -47,29 +48,41 @@ class Response < ActiveRecord::Base
       self.save
       repo.fetch
     end
+
+    finished
   end
 
   def repo_fetched(repo)
-    # if repo.contributions.count > 1
-    #   # json[:repos] << repo.parse_for_render
+    if repo.contributions.count > 1
+      # json[:repos] << repo.parse_for_render
 
-    #   # fetch all commits by contributors to repo
-    #   repo.contributions.each do |contribution|
-    #     commit = Commit.find_by_contributor_and_repo_id(contribution.contributor, contribution.repo_id)
-    #     commit.fetch
+      # fetch all commits by contributors to repo
+      repo.contributions.each do |contribution|
+        begin 
+          self.contribution_responses << ContributionResponse.create(contribution_id: contribution.id)
+        rescue ActiveRecord::RecordNotUnique => e
+          p 'contribution responses not unique'
+        end
 
-    #     # json[:commits] << commit.parse_for_render
-    #   end
-    # else
-    #   # if the repo doesn't have any contributors 
-    #   # first delete references to the contribution in user and repo 
-    #   # then delete contribution
-    #   # then delete the repo
-    #   repo.contributions.delete(repo.contributions.first)
-    #   user.contributions.delete(contribution)
-    #   contribution.destroy
-    #   repo.destroy
-    # end
+        self.save
+        contribution.fetch
+
+        # json[:commits] << commit.parse_for_render
+      end
+    else
+      # if the repo doesn't have any contributors then delete it
+      repo.destroy
+    end
+
+    finished
+  end
+
+  def contributions_fetched(contribution)
+    finished
+  end
+
+  def finished
+
   end
 
 end

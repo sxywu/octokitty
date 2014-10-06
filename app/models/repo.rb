@@ -1,6 +1,6 @@
 class Repo < ActiveRecord::Base
-  has_many :contributions
-  has_many :users, :through => :contributions
+  has_many :contributions, :dependent => :destroy
+  has_many :users, :through => :contributions, :uniq => true
 
   has_many :repo_responses
   has_many :responses, :through => :repo_responses, :uniq => true
@@ -9,12 +9,16 @@ class Repo < ActiveRecord::Base
 
 
   def fetch
+    # if this has been updated in the last 7 days, return
+    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+
+    self.fetched = 'fetching'
+    self.save
+
   	perform
   end
 
   def perform
-  	# if this has been updated in the last 7 days, return
-    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
   	client = ApiClient.new
     contribs = client.get_contribs("#{self.owner}"+"/"+"#{self.name}", anon=nil, {:per_page => 100})
@@ -50,6 +54,9 @@ class Repo < ActiveRecord::Base
   end
 
   def success
+    self.fetched = 'success'
+    self.save
+
     self.responses.each do |response|
       response.repo_fetched(self)
     end

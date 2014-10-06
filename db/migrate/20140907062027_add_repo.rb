@@ -6,6 +6,7 @@ class AddRepo < ActiveRecord::Migration
       t.integer :stars
       t.integer :forks
       t.integer :watches
+      t.string :fetched
       t.timestamps
     end
   end

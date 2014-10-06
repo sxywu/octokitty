@@ -4,7 +4,6 @@ class AddResponse < ActiveRecord::Migration
       t.boolean :finished
       t.string :error
       t.string :username
-      t.text :outstanding
       t.timestamps
     end
   end
