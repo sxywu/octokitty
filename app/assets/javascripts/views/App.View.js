@@ -105,7 +105,6 @@ define([
 			}, 1000);
 		},
 		render: function() {
-			debugger
 			if (_.values(this.contributors).length) {
 				// update loading indicator
 				$('.progress-bar').css('width', '75%');

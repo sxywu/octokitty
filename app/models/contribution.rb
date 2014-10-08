@@ -7,15 +7,14 @@ class Contribution < ActiveRecord::Base
 
   attr_accessible :contributor, :repo_id, :owns, :fetched
 
-   def fetch
-
-   	self.fetched = 'fetching'
-    self.save
-
-  	perform
+  def fetch
+  	Delayed::Job.enqueue self
   end
 
   def perform
+  	self.fetched = 'fetching'
+    self.save
+
     client = ApiClient.new
     repo = Repo.find(self.repo_id)
     if self.commits

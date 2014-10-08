@@ -74,9 +74,6 @@ class Response < ActiveRecord::Base
         contribution.fetch
 
       end
-    else
-      # if the repo doesn't have any contributors then delete it
-      repo.destroy
     end
 
     # finished_fetches
@@ -108,6 +105,14 @@ class Response < ActiveRecord::Base
       else
         self.finished = 'finished'
         self.save
+      end
+    end
+  end
+
+  def clean_repos
+    self.repos.each do |repo|
+      if repo.contributions.count === 1
+        repo.destroy
       end
     end
   end

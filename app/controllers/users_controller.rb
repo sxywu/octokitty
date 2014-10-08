@@ -25,6 +25,7 @@ class UsersController < ApplicationController
 
     response.finished_fetches
     if response.finished === 'finished'
+      response.clean_repos # destroy the repos with no contributors first
       render :json => {
         users: response.users,
         repos: response.repos.map{|repo| repo.parse_for_render},

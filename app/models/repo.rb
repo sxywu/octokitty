@@ -9,16 +9,14 @@ class Repo < ActiveRecord::Base
 
 
   def fetch
-    # if this has been updated in the last 7 days, return
-    # return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
-
-    self.fetched = 'fetching'
-    self.save
-
-  	perform
+  	Delayed::Job.enqueue self
   end
 
   def perform
+    # if this has been updated in the last 7 days, return
+    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    self.fetched = 'fetching'
+    self.save
 
   	client = ApiClient.new
     contribs = client.get_contribs("#{self.owner}"+"/"+"#{self.name}", anon=nil, {:per_page => 100})

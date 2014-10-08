@@ -11,15 +11,15 @@ class User < ActiveRecord::Base
   def fetch
     increment_user
 
-    # return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
-
-    self.fetched = 'fetching'
-    self.save
-
-  	perform
+  	Delayed::Job.enqueue self
   end
 
   def perform
+
+    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    self.fetched = 'fetching'
+    self.save
+
   	get_repos
     self.save
 
