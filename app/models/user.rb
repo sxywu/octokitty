@@ -11,7 +11,7 @@ class User < ActiveRecord::Base
   def fetch
     increment_user
 
-    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    # return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
     self.fetched = 'fetching'
     self.save
@@ -65,6 +65,10 @@ class User < ActiveRecord::Base
 
   def get_user_info
   	client = ApiClient.new
+  end
+
+  def parse_for_render
+    return self
   end
 
 end

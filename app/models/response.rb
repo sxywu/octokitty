@@ -56,7 +56,7 @@ class Response < ActiveRecord::Base
       repo.fetch
     end
 
-    finished_fetches
+    # finished_fetches
   end
 
   def repo_fetched(repo)
@@ -79,13 +79,11 @@ class Response < ActiveRecord::Base
       repo.destroy
     end
 
-    p 'finished repo ' + repo.id.to_s
-    finished_fetches
+    # finished_fetches
   end
 
   def contributions_fetched(contribution)
-    p 'finished contribution ' + contribution.id.to_s
-    finished_fetches
+    # finished_fetches
   end
 
   def finished_fetches

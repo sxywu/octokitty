@@ -4,7 +4,6 @@ Octokitty::Application.routes.draw do
   match 'login' => 'home#login'
   match 'oauth/callback' => 'oauth#callback'
 
-  get 'users/:username'=> 'users#show'
-  get '/repos/:owner/:repo/commits/:author' => 'commits#show'
-  get '/repos/:owner/:repo/contributors' => 'contributors#show'
+  get 'users/:username'=> 'users#start'
+  get 'users/:username/status' => 'users#get_status'
 end

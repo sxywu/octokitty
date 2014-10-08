@@ -10,7 +10,7 @@ class Repo < ActiveRecord::Base
 
   def fetch
     # if this has been updated in the last 7 days, return
-    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    # return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
     self.fetched = 'fetching'
     self.save

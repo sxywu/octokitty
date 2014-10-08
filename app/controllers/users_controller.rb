@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   include ApplicationHelper
 
-  def show
+  def start
 
     username = params[:username]
     response = Response.find_by_username(username)
@@ -11,23 +11,28 @@ class UsersController < ApplicationController
     end
 
     response.fetch
-    # json = {}
-    # json[:users] = []
-    # json[:repos] = []
-    # json[:commits] = []
-
-    # username = params[:username]
-    # user = fetch_user(username, json)
-
-    # user.contributions.where(:owns => true).each do |contribution|
-    #   # find all repos user owns
-    #   Repo.find(contribution.repo_id).contributions.where(:owns => false).each do |contribution|
-    #     # find all contributors to the repo
-    #     fetch_user(contribution.contributor, json)
-    #   end
-    # end
 
     render :json => {}
+  end
+
+  def get_status
+    username = params[:username]
+    response = Response.find_by_username(username)
+
+    if not response
+      response = Response.create(username: username)
+    end
+
+    response.finished_fetches
+    if response.finished === 'finished'
+      render :json => {
+        users: response.users,
+        repos: response.repos.map{|repo| repo.parse_for_render},
+        commits: response.contributions.map{|contribution| contribution.parse_for_render}
+      }
+    else
+      render :json => {}
+    end
   end
 
 end

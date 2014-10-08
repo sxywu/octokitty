@@ -53,10 +53,9 @@ class Contribution < ActiveRecord::Base
   end
 
   def parse_for_render
-    repo = Repo.find(self.repo_id)
-    return JSON.parse(self.data).map do |c|
-      c[:repo] = repo.name
-      c[:owner] = repo.owner
+    return JSON.parse(self.commits).map do |c|
+      c[:repo] = self.repo.name
+      c[:owner] = self.repo.owner
 
       c
     end
