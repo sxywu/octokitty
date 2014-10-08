@@ -1,7 +1,7 @@
 class AddResponse < ActiveRecord::Migration
   def up
     create_table :responses do |t|
-      t.boolean :finished
+      t.string :finished
       t.string :error
       t.string :username
       t.timestamps

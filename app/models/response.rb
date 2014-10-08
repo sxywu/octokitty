@@ -11,13 +11,21 @@ class Response < ActiveRecord::Base
   attr_accessible :username
 
   def fetch
+    return if (self.finished === 'finished') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+
+    self.finished = 'first'
+    self.save
+
   	perform
   end
 
   def perform
-
   	username = self.username
-  	user = User.find_by_username(username)
+    fetch_user(username)
+  end
+
+  def fetch_user(username)
+    user = User.find_by_username(username)
     
     if not user
       user = User.create(username: username)
@@ -30,7 +38,6 @@ class Response < ActiveRecord::Base
     end
     
     self.save
-
     user.fetch
   end
 
@@ -49,12 +56,11 @@ class Response < ActiveRecord::Base
       repo.fetch
     end
 
-    finished
+    finished_fetches
   end
 
   def repo_fetched(repo)
     if repo.contributions.count > 1
-      # json[:repos] << repo.parse_for_render
 
       # fetch all commits by contributors to repo
       repo.contributions.each do |contribution|
@@ -67,22 +73,45 @@ class Response < ActiveRecord::Base
         self.save
         contribution.fetch
 
-        # json[:commits] << commit.parse_for_render
       end
     else
       # if the repo doesn't have any contributors then delete it
       repo.destroy
     end
 
-    finished
+    p 'finished repo ' + repo.id.to_s
+    finished_fetches
   end
 
   def contributions_fetched(contribution)
-    finished
+    p 'finished contribution ' + contribution.id.to_s
+    finished_fetches
   end
 
-  def finished
+  def finished_fetches
+    return if self.users.empty? or self.repos.empty? or self.contributions.empty?
 
+    users_fetched = self.users.all? {|user| user.fetched === 'success'}
+    repos_fetched = self.repos.all? {|repo| repo.fetched === 'success'}
+    contributions_fetched = self.contributions.all? {|contribution| contribution.fetched === 'success'}
+
+    if users_fetched and repos_fetched and contributions_fetched
+      if self.finished === 'first'
+        self.finished = 'second'
+        self.save
+        # if this was first user
+        self.repos.where(:owner => self.username).each do |repo|
+          # so fetch all of his/her contributors
+          repo.contributions.where(:owns => false).each do |contribution|
+            p contribution.contributor
+            fetch_user(contribution.contributor)
+          end
+        end
+      else
+        self.finished = 'finished'
+        self.save
+      end
+    end
   end
 
 end

@@ -10,7 +10,7 @@ class Repo < ActiveRecord::Base
 
   def fetch
     # if this has been updated in the last 7 days, return
-    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
     self.fetched = 'fetching'
     self.save
@@ -45,7 +45,7 @@ class Repo < ActiveRecord::Base
 
   	# for each of users, add repo to contributions
     begin 
-      user.contributions << Contribution.create(repo_id: self.id, owns: false)
+      self.contributions << Contribution.create(contributor: user.username, owns: false)
     rescue
       p 'repo.rb: contribution not unique'
     end

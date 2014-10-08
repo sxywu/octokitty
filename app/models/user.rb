@@ -11,7 +11,7 @@ class User < ActiveRecord::Base
   def fetch
     increment_user
 
-    # return if (self.created_at != self.updated_at) and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
+    return if (self.fetched === 'success') and (Time.now < (self.updated_at + 7 * 24 * 60 * 60))
 
     self.fetched = 'fetching'
     self.save

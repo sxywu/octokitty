@@ -71,7 +71,7 @@ ActiveRecord::Schema.define(:version => 20140925021136) do
   end
 
   create_table "responses", :force => true do |t|
-    t.boolean  "finished"
+    t.string   "finished"
     t.string   "error"
     t.string   "username"
     t.datetime "created_at", :null => false

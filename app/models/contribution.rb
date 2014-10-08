@@ -5,9 +5,10 @@ class Contribution < ActiveRecord::Base
   has_many :contribution_responses
   has_many :responses, :through => :contribution_responses, :uniq => true
 
-  attr_accessible :repo_id, :owns, :fetched
+  attr_accessible :contributor, :repo_id, :owns, :fetched
 
    def fetch
+
    	self.fetched = 'fetching'
     self.save
 
