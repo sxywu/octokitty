@@ -3,8 +3,7 @@ define([
 	"underscore",
 	"backbone",
 	"d3",
-	"visualizations/Line.Visualization",
-	"visualizations/Circle.Visualization",
+	"views/Timeline.View",
 	"visualizations/Graph.Visualization",
 	"visualizations/Label.Visualization",
 	"text!templates/Commit.Template.html"
@@ -13,8 +12,7 @@ define([
 	_,
 	Backbone,
 	d3,
-	LineVisualization,
-	CircleVisualization,
+	TimelineView,
 	GraphVisualization,
 	LabelVisualization,
 	CommitTemplate
@@ -23,18 +21,25 @@ define([
 		initialize: function() {
 			this.timeline = d3.select('svg.timeline');
 			this.graph = d3.select('svg.graph');
+
+			this.timelineView = new TimelineView({
+				el: this.timeline
+			});
+
 			this.graphVisualization = new GraphVisualization();
-			this.lineVisualization = new LineVisualization();
-			this.circleVisualization = new CircleVisualization();
 			this.labelVisualization = new LabelVisualization();
 
 			$('.submitUser').click(_.bind(this.getUser, this));
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 			$('.search').click(_.bind(this.search, this));
 
-			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
-			$(window).scroll(windowScroll);
-			$(window).scroll(_.bind(this.scrollLabel, this));
+			this.users = $.parseJSON(localStorage['users'])
+			this.repos = $.parseJSON(localStorage['repos'])
+			this.commits = $.parseJSON(localStorage['commits'])
+			this.render();
+			// var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
+			// $(window).scroll(windowScroll);
+			// $(window).scroll(_.bind(this.scrollLabel, this));
 		},
 		search: function() {
 			if ($('.inputUser').hasClass('hide')) {
@@ -92,10 +97,7 @@ define([
 					if (response.users) {
 						that.users = response.users;
 						that.repos = response.repos;
-						that.contributors = _.chain(response.commits)
-							.flatten()
-							.groupBy(function(commit) {return commit.author})
-							.value();
+						that.commits = response.commits;
 
 						that.render();
 					} else {
@@ -105,92 +107,93 @@ define([
 			}, 1000);
 		},
 		render: function() {
-			if (_.values(this.contributors).length) {
-				// update loading indicator
-				$('.progress-bar').css('width', '75%');
+			this.timelineView.processData(this.users, this.repos, this.commits);
+			// if (_.values(this.contributors).length) {
+			// 	// update loading indicator
+			// 	$('.progress-bar').css('width', '75%');
 
-				this.formatData();
-				this.calculateTimeline();
-				this.calculateGraph();
+			// 	this.formatData();
+			// 	this.calculateTimeline();
+			// 	this.calculateGraph();
 
-				$('.progress-bar').css('width', '100%');
-				this.showSomething(['timelineWrapper', 'summary', 'weekWrapper']);
-				this.enableSomething(['inputUser', 'submitUser']);
+			// 	$('.progress-bar').css('width', '100%');
+			// 	this.showSomething(['timelineWrapper', 'summary', 'weekWrapper']);
+			// 	this.enableSomething(['inputUser', 'submitUser']);
 
-				// empty everything bc i'm lazy
-				$(this.timeline.node()).empty();
-				$(this.graph.node()).empty();
+			// 	// empty everything bc i'm lazy
+			// 	$(this.timeline.node()).empty();
+			// 	$(this.graph.node()).empty();
 
-				this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
-				this.graph.call(this.graphVisualization);
+			// 	this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
+			// 	this.graph.call(this.graphVisualization);
 
-				this.renderBackground();
+			// 	this.renderBackground();
 
-				// contributor lines
-				this.timeline.selectAll('path')
-					.data(_.values(this.contributors))
-					.enter().append('path')
-					.call(this.lineVisualization);
+			// 	// contributor lines
+			// 	this.timeline.selectAll('path')
+			// 		.data(_.values(this.contributors))
+			// 		.enter().append('path')
+			// 		.call(this.lineVisualization);
 
-				// commit circles
-				this.timeline.selectAll('circle')
-					.data(this.commits)
-					.enter().append('circle')
-					.call(this.circleVisualization);
-				this.commitCircles = d3.selectAll('.commit')[0];
+			// 	// commit circles
+			// 	this.timeline.selectAll('circle')
+			// 		.data(this.commits)
+			// 		.enter().append('circle')
+			// 		.call(this.circleVisualization);
+			// 	this.commitCircles = d3.selectAll('.commit')[0];
 
-				this.renderTimelineLabels();
+			// 	this.renderTimelineLabels();
 
 
-				this.lastIndex = 0;
-				this.lastPos = 0;
-				this.windowScroll();
-				this.scrollLabel();
+			// 	this.lastIndex = 0;
+			// 	this.lastPos = 0;
+			// 	this.windowScroll();
+			// 	this.scrollLabel();
 
-			} else {
-				// give "sorry you don't really have contributors for your top repos *sadface*" error message
-			}
+			// } else {
+			// 	// give "sorry you don't really have contributors for your top repos *sadface*" error message
+			// }
 		},
 		formatData: function() {
-			var that = this,
-				processedCommits,
-				interval = d3.time.week;
-			this.commits = [];
-			// post processing: flatten the contributors' commit array, then sort them by date
-			_.each(this.contributors, function(commits, contributor) {
-				processedCommits = {};
-				_.chain(commits)
-					.flatten()
-					.each(function(commit) {
-						// round date to the nearest week
-						var date = interval(new Date(commit.date.split('T')[0]));
-						var identifier = date + ':' + commit.owner + '/' + commit.repo;
-						if (processedCommits[identifier]) {
-							processedCommits[identifier].times.push({
-								date: new Date(commit.date),
-								url: commit.url,
-								sha: commit.sha});
-						} else {
-							commit.times = [{
-								date: new Date(commit.date),
-								url: commit.url,
-								sha: commit.sha}];
-							commit.date = date.toISOString();
-							delete commit.url;
-							delete commit.sha;
-							processedCommits[identifier] = commit;
-						}
-					});
-				processedCommits = _.sortBy(processedCommits, function(commit) {
-					that.commits.push(commit);
-					commit.dateObj = new Date(commit.date);
-					return commit.dateObj;
-				});
-				that.contributors[contributor] = processedCommits;
-			});
+			// var that = this,
+			// 	processedCommits,
+			// 	interval = d3.time.week;
+			// this.commits = [];
+			// // post processing: flatten the contributors' commit array, then sort them by date
+			// _.each(this.contributors, function(commits, contributor) {
+			// 	processedCommits = {};
+			// 	_.chain(commits)
+			// 		.flatten()
+			// 		.each(function(commit) {
+			// 			// round date to the nearest week
+			// 			var date = interval(new Date(commit.date.split('T')[0]));
+			// 			var identifier = date + ':' + commit.owner + '/' + commit.repo;
+			// 			if (processedCommits[identifier]) {
+			// 				processedCommits[identifier].times.push({
+			// 					date: new Date(commit.date),
+			// 					url: commit.url,
+			// 					sha: commit.sha});
+			// 			} else {
+			// 				commit.times = [{
+			// 					date: new Date(commit.date),
+			// 					url: commit.url,
+			// 					sha: commit.sha}];
+			// 				commit.date = date.toISOString();
+			// 				delete commit.url;
+			// 				delete commit.sha;
+			// 				processedCommits[identifier] = commit;
+			// 			}
+			// 		});
+			// 	processedCommits = _.sortBy(processedCommits, function(commit) {
+			// 		that.commits.push(commit);
+			// 		commit.dateObj = new Date(commit.date);
+			// 		return commit.dateObj;
+			// 	});
+			// 	that.contributors[contributor] = processedCommits;
+			// });
 
-			// sort this.commits
-			this.commits = _.sortBy(this.commits, function(commit) {return commit.dateObj});
+			// // sort this.commits
+			// this.commits = _.sortBy(this.commits, function(commit) {return commit.dateObj});
 		},
 		/*
 		calculate the positions of each commit, where x-axis is contributor
