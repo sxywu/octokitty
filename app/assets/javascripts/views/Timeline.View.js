@@ -168,12 +168,12 @@ define([
 				.enter().append('path')
 				.call(this.lineVisualization);	
 
-			var circles = _.chain(this.lineData)
+			this.commits = _.chain(this.lineData)
 				.flatten().sortBy(function(commit) {
 					return -commit.radius;
 				}).value();
 			this.d3El.selectAll('circle')
-				.data(circles)
+				.data(this.commits)
 				.enter().append('circle')
 				.call(this.circleVisualization);
 		}

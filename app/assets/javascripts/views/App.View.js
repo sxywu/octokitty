@@ -4,6 +4,7 @@ define([
 	"backbone",
 	"d3",
 	"views/Timeline.View",
+	"views/Graph.View",
 	"visualizations/Graph.Visualization",
 	"visualizations/Label.Visualization",
 	"text!templates/Commit.Template.html"
@@ -13,6 +14,7 @@ define([
 	Backbone,
 	d3,
 	TimelineView,
+	GraphView,
 	GraphVisualization,
 	LabelVisualization,
 	CommitTemplate
@@ -25,8 +27,11 @@ define([
 			this.timelineView = new TimelineView({
 				el: this.timeline.node()
 			});
+			this.graphView = new GraphView({
+				el: this.graph.node()
+			})
 
-			this.graphVisualization = new GraphVisualization();
+			// this.graphVisualization = new GraphVisualization();
 			this.labelVisualization = new LabelVisualization();
 
 			$('.submitUser').click(_.bind(this.getUser, this));
@@ -112,6 +117,14 @@ define([
 
 			this.contributorsAndRepos = this.timelineView.contributorsAndRepos;
 			this.contributorScale = this.timelineView.contributorScale;
+
+			this.graphView.processData(this.contributorsAndRepos, this.timelineView.commits);
+			this.graphView.render();
+
+			this.commitsByWeek = _.chain(this.timelineView.lineData)
+				.flatten()
+				.groupBy(function(commit) {return commit.x}).values().value();
+
 			// if (_.values(this.contributors).length) {
 			// 	// update loading indicator
 			// 	$('.progress-bar').css('width', '75%');
@@ -127,11 +140,8 @@ define([
 			// 	// empty everything bc i'm lazy
 			// 	$(this.graph.node()).empty();
 
-			// 	this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
-			// 	this.graph.call(this.graphVisualization);
 
 				this.renderBackground();
-
 				this.renderTimelineLabels();
 
 
