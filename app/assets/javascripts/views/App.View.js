@@ -110,6 +110,9 @@ define([
 		render: function() {
 			this.timelineView.processData(this.users, this.repos, this.commits);
 			this.timelineView.render();
+
+			this.contributorsAndRepos = this.timelineView.contributorsAndRepos;
+			this.contributorScale = this.timelineView.contributorScale;
 			// if (_.values(this.contributors).length) {
 			// 	// update loading indicator
 			// 	$('.progress-bar').css('width', '75%');
@@ -128,9 +131,9 @@ define([
 			// 	this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
 			// 	this.graph.call(this.graphVisualization);
 
-			// 	this.renderBackground();
+				this.renderBackground();
 
-			// 	this.renderTimelineLabels();
+				this.renderTimelineLabels();
 
 
 			// 	this.lastIndex = 0;
@@ -249,63 +252,63 @@ define([
 		// 		})
 		// 	});
 		// },
-		calculateGraph: function() {
-			this.nodes = {};
-			this.links = {};
-			var source, target,
-				owner, repo,
-				that = this;
-			_.each(this.sortedRepos, function(ownerRepo) {
-				owner = ownerRepo.split('/')[0];
-				repo = ownerRepo.split('/')[1];
-				that.nodes[ownerRepo] = {
-					owner: owner,
-					repo: repo,
-					show: 0,
-					total: 0
-				}
-			});
-			_.each(this.repos, function(repo) {
-				// contributor is the source, repo is the target
-				target = that.nodes[repo.owner + '/' + repo.name];
-				_.each(repo.contributors, function(contributor) {
-					source = that.nodes[contributor];
-					that.links[contributor + ',' + repo.owner + '/' + repo.name] = {
-						source: source,
-						target: target,
-						weight: 0,
-						width: 0,
-						total: 0
-					};
-				});
-			});
+		// calculateGraph: function() {
+		// 	this.nodes = {};
+		// 	this.links = {};
+		// 	var source, target,
+		// 		owner, repo,
+		// 		that = this;
+		// 	_.each(this.sortedRepos, function(ownerRepo) {
+		// 		owner = ownerRepo.split('/')[0];
+		// 		repo = ownerRepo.split('/')[1];
+		// 		that.nodes[ownerRepo] = {
+		// 			owner: owner,
+		// 			repo: repo,
+		// 			show: 0,
+		// 			total: 0
+		// 		}
+		// 	});
+		// 	_.each(this.repos, function(repo) {
+		// 		// contributor is the source, repo is the target
+		// 		target = that.nodes[repo.owner + '/' + repo.name];
+		// 		_.each(repo.contributors, function(contributor) {
+		// 			source = that.nodes[contributor];
+		// 			that.links[contributor + ',' + repo.owner + '/' + repo.name] = {
+		// 				source: source,
+		// 				target: target,
+		// 				weight: 0,
+		// 				width: 0,
+		// 				total: 0
+		// 			};
+		// 		});
+		// 	});
 
-			_.each(this.commits, function(commit) {
-				that.nodes[commit.author].total += 1;
-				that.nodes[commit.owner + '/' + commit.repo].total += 1;
-				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
-			});
-			var maxWeight = _.max(this.links, function(link) {return link.total}).total;
-			this.linkScale = d3.scale.linear().domain([1, maxWeight]).range([1, 8]);
+		// 	_.each(this.commits, function(commit) {
+		// 		that.nodes[commit.author].total += 1;
+		// 		that.nodes[commit.owner + '/' + commit.repo].total += 1;
+		// 		that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
+		// 	});
+		// 	var maxWeight = _.max(this.links, function(link) {return link.total}).total;
+		// 	this.linkScale = d3.scale.linear().domain([1, maxWeight]).range([1, 8]);
 
-			this.commitsByWeek = _.chain(this.commits).groupBy(function(commit) {return commit.y}).values().value();
+		// 	this.commitsByWeek = _.chain(this.commits).groupBy(function(commit) {return commit.y}).values().value();
 
-		},
+		// },
 		// draw the background here bc i'm too lazy to put it in another file
 		renderBackground: function() {
 			var that = this,
 				backgrounds = {},
 				owner,
 				background;
-			_.each(this.sortedRepos, function(repo) {
+			_.each(this.contributorsAndRepos, function(repo) {
 				owner = repo.split('/')[0];
 				if (!backgrounds[owner]) {
 					background = that.timeline.append('rect')
 						.classed('background', true)
-						.attr('x', that.repoScale(owner) - app.contributorPadding / 2)
-						.attr('y', 0)
-						.attr('width', app.contributorPadding)
-						.attr('height', $('.timeline').height() + 500)
+						.attr('x', 0)
+						.attr('y', that.contributorScale(owner) - app.contributorPadding / 2)
+						.attr('width', $('.timeline').width() + 500)
+						.attr('height', app.contributorPadding)
 						.attr('stroke', app.d3Colors(owner))
 						.attr('stroke-opacity', .2)
 						.attr('fill', app.d3Colors(owner))
@@ -317,20 +320,19 @@ define([
 				}
 			});
 
-			$('.timeline').width(this.sortedRepos.length * app.contributorPadding + app.padding.left + app.padding.right);
+			// $('.timeline').width(this.sortedRepos.length * app.contributorPadding + app.padding.left + app.padding.right);
 		},
 		renderTimelineLabels: function() {
 			var that = this;
 			this.timelineLabels = this.timeline.append('g');
 			this.timelineLabels.selectAll('.label')
-				.data(_.map(this.sortedRepos, function(repo, i) {
+				.data(_.map(this.contributorsAndRepos, function(repo, i) {
 					var ownerRepo = repo.split('/');
 					return {
 						owner: ownerRepo[0], 
 						repo: ownerRepo[1],
-						x: that.repoScale(repo),
-						y: 15,
-						rotate: -90,
+						x: 15,
+						y: that.contributorScale(repo),
 						text: ownerRepo[0] + (ownerRepo[1] ? '/' + ownerRepo[1] : '')
 					}
 				})).enter().append('g')
