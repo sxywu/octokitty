@@ -109,6 +109,7 @@ define([
 		},
 		render: function() {
 			this.timelineView.processData(this.users, this.repos, this.commits);
+			this.timelineView.render();
 			// if (_.values(this.contributors).length) {
 			// 	// update loading indicator
 			// 	$('.progress-bar').css('width', '75%');
@@ -122,26 +123,12 @@ define([
 			// 	this.enableSomething(['inputUser', 'submitUser']);
 
 			// 	// empty everything bc i'm lazy
-			// 	$(this.timeline.node()).empty();
 			// 	$(this.graph.node()).empty();
 
 			// 	this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
 			// 	this.graph.call(this.graphVisualization);
 
 			// 	this.renderBackground();
-
-			// 	// contributor lines
-			// 	this.timeline.selectAll('path')
-			// 		.data(_.values(this.contributors))
-			// 		.enter().append('path')
-			// 		.call(this.lineVisualization);
-
-			// 	// commit circles
-			// 	this.timeline.selectAll('circle')
-			// 		.data(this.commits)
-			// 		.enter().append('circle')
-			// 		.call(this.circleVisualization);
-			// 	this.commitCircles = d3.selectAll('.commit')[0];
 
 			// 	this.renderTimelineLabels();
 

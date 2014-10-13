@@ -22,30 +22,30 @@ define([
 			if (!source) {
 				// first point
 				path.push(drawStart(target.x, target.y));
-			} else if (source.y > target.y - gap) {
+			} else if (source.x + gap > target.x) {
 				// if they're sufficiently close to each other
-				if (source.x === target.x) {
+				if (source.y === target.y) {
 					path.push(drawLine(target.x, target.y));
 				} else {
 					path.push(drawCurve(source.x, source.y, target.x, target.y));
 				}
 			} else {
 				subPath = [];
-				if (source.x !== source.authorX) {
+				if (source.y !== source.authorY) {
 					// if the source repo owner isn't the same as the contributor, move the line back
-					subPath.push(drawCurve(source.x, source.y, source.authorX, source.y + gap / 3));
+					subPath.push(drawCurve(source.x, source.y, source.x + gap / 3, source.authorY));
 				}
 
 				x = target.x;
 				y = target.y;
-				if (target.x !== target.authorX) {
-					x = target.authorX;
-					y = target.y - gap / 3;
+				if (target.y !== target.authorY) {
+					x = target.x - gap / 3;
+					y = target.authorY;
 				}
 				
 				subPath.push(drawLine(x, y));
 
-				if (target.x !== target.authorX) {
+				if (target.y !== target.authorY) {
 					subPath.push(drawCurve(x, y, target.x, target.y));
 				}
 
@@ -67,9 +67,6 @@ define([
 
 	var diagonal = d3.svg.diagonal(),
 	drawCurve = function(x1, y1, x2, y2) {
-		// var midX = (x1 + x2) / 2,
-		// 	midY = (y1 + y2) / 2;
-		// return 'Q' + x1 + ',' + midY + ' ' + midX + ',' + midY + ' T' + x2 + ',' + y2;
 		return diagonal({
 			source: {x: x1, y: y1},
 			target: {x: x2, y: y2}

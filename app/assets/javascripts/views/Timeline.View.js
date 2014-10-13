@@ -15,14 +15,13 @@ define([
 ) {
 	return Backbone.View.extend({
 		initialize: function() {
+			this.d3El = d3.select(this.el);
+
 			this.lineVisualization = new LineVisualization();
 			this.circleVisualization = new CircleVisualization();
 
 			this.contributorScale = d3.scale.ordinal();
 			this.timeScale = d3.scale.linear();
-		},
-		render: function() {
-
 		},
 		processData: function(users, repos, commits) {
 			this.contributors = _.chain(repos)
@@ -74,11 +73,9 @@ define([
 					commit.authorY = that.contributorScale(commit.author);
 				});
 			});
-
-			debugger
 		},
 		calculateY: function() {
-			var height = $(window).height(),
+			var height = this.$el.height(),
 				length = Math.floor(height / app.contributorPadding),
 				range = _.chain(length).range()
 					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value();
@@ -131,6 +128,20 @@ define([
 			});
 
 			this.timeScale.domain([minDate, new Date()]); // domain is min date and today
+		},
+		render: function() {
+			this.$el.empty();
+
+			// contributor lines
+			this.d3El.selectAll('path')
+				.data(this.lineData)
+				.enter().append('path')
+				.call(this.lineVisualization);	
+
+			this.d3El.selectAll('circle')
+				.data(_.flatten(this.lineData))
+				.enter().append('circle')
+				.call(this.circleVisualization);	
 		}
 	});
 });
