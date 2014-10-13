@@ -43,8 +43,7 @@ define([
 			this.repos = $.parseJSON(localStorage['repos'])
 			this.commits = $.parseJSON(localStorage['commits'])
 			this.render();
-			// var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
-			// $(window).scroll(windowScroll);
+			
 		},
 		search: function() {
 			if ($('.inputUser').hasClass('hide')) {
@@ -122,7 +121,7 @@ define([
 			this.graphView.render();
 
 			this.commitsByWeek = _.chain(this.timelineView.lineData)
-				.flatten()
+				.flatten().sortBy(function(commit) {return commit.x})
 				.groupBy(function(commit) {return commit.x}).values().value();
 
 			// if (_.values(this.contributors).length) {
@@ -144,13 +143,14 @@ define([
 				this.renderBackground();
 				this.renderTimelineLabels();
 
+			this.lastIndex = 0;
+			this.lastPos = 0;
+			this.windowScroll();
+			this.scrollLabel();
 
-
+			var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
+			$('.leftPanel').scroll(windowScroll);
 			$('.leftPanel').scroll(_.bind(this.scrollLabel, this));
-			// 	this.lastIndex = 0;
-			// 	this.lastPos = 0;
-			// 	this.windowScroll();
-			// 	this.scrollLabel();
 
 			// } else {
 			// 	// give "sorry you don't really have contributors for your top repos *sadface*" error message
@@ -354,11 +354,11 @@ define([
 		windowScroll: function() {
 			if (!this.commitsByWeek) return;
 
-			var top = $(window).scrollTop() + $(window).height() / 3,
+			var left = $('.leftPanel').scrollLeft() + app.padding.left,
 				commits = this.commitsByWeek[this.lastIndex], 
 				node, link,
 				that = this;
-			if (this.lastPos < top) {
+			if (this.lastPos < left) {
 				// if it's scrolling down
 				while (true) {
 					// if there are no more commits, return
@@ -367,64 +367,39 @@ define([
 						break;
 					}
 
-					if (this.commitsByWeek[this.lastIndex][0].y > top) {
+					if (this.commitsByWeek[this.lastIndex][0].x > left) {
 						break;
 					} else {
 						commits = this.commitsByWeek[this.lastIndex];
-						_.each(commits, function(commit) {
-							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
-							if (link.weight < link.total) {
-								link.weight += 1;
-								link.width = that.linkScale(link.weight);
-							}
-
-							node = that.nodes[commit.author];
-							if (node.show < node.total) node.show += 1;
-
-							node = that.nodes[commit.owner + '/' + commit.repo];
-							if (node.show < node.total) node.show += 1;
-
-						})
+						this.graphView.moreCommits(commits);
 						this.lastIndex += 1;
 					}
 				}
-			} else if (this.lastPos > top) {
+			} else if (this.lastPos > left) {
 				while (true) {
 					if (!this.commitsByWeek[this.lastIndex]) {
 						this.lastIndex += 1;
 						break;
 					}
 					
-					if (this.commitsByWeek[this.lastIndex][0].y < top) {
+					if (this.commitsByWeek[this.lastIndex][0].x < left) {
 						break;
 					} else {
 						commits = this.commitsByWeek[this.lastIndex];
-						_.each(commits, function(commit) {
-							link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
-							if (link.weight > 0) {
-								link.weight -= 1;
-								link.width = that.linkScale(link.weight);
-							}
-
-							node = that.nodes[commit.author];
-							if (node.show > 0) node.show -= 1;
-
-							node = that.nodes[commit.owner + '/' + commit.repo];
-							if (node.show > 0) node.show -= 1;
-						});
+						this.graphView.lessCommits(commits);
 						this.lastIndex -= 1;
 					}
 				}
 			}
 
-			this.circleVisualization.highlight(commits);
-			this.graphVisualization.showLabels(commits);
-			this.graphVisualization.update();
+			this.graphView.updateScroll(commits);
+			this.timelineView.updateScroll(commits);
+
 			$('.week').text(app.formatTime(commits[0].dateObj));
 			$('.commitData').html(_.template(CommitTemplate, {commits: commits}));
 			$('.commitChevron').click(_.bind(this.toggleCommitSHA, this));
 
-			this.lastPos = top;
+			this.lastPos = left;
 		},
 		scrollLabel: function() {
 			if (!this.timelineLabels) return;

@@ -47,7 +47,7 @@ require([
 ) {
     app = {};
     var height = $(window).height();
-    app.padding = {top: 35, bottom: 35, left: 150, right: 150};
+    app.padding = {top: 35, bottom: 35, left: 300, right: 150};
     app.contributorPadding = 35;
     app.formatTime = d3.time.format('%B %d, %Y')
     app.d3Colors = d3.scale.category20();

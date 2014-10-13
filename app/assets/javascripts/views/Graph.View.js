@@ -19,6 +19,8 @@ define([
 
 			this.graphVisualization = new GraphVisualization();
 			this.labelVisualization = new LabelVisualization();
+
+			this.linkScale = d3.scale.linear().range([1, 8]);
 		},
 		processData: function(contributorsAndRepos, commits) {
 			this.nodes = {};
@@ -61,10 +63,52 @@ define([
 				}
 				that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
 			});
+
+			var maxWeight = _.max(this.links, function(link) {return link.total}).total;
+			this.linkScale.domain([1, maxWeight]);
 		},
 		render: function() {
+			this.$el.empty();
+
 			this.graphVisualization.nodes(_.values(this.nodes)).links(_.values(this.links));
 			this.d3El.call(this.graphVisualization);
+		},
+		moreCommits: function(commits) {
+			var that = this;
+			_.each(commits, function(commit) {
+				link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
+				if (link.weight < link.total) {
+					link.weight += 1;
+					link.width = that.linkScale(link.weight);
+				}
+
+				node = that.nodes[commit.author];
+				if (node.show < node.total) node.show += 1;
+
+				node = that.nodes[commit.owner + '/' + commit.repo];
+				if (node.show < node.total) node.show += 1;
+
+			})
+		},
+		lessCommits: function(commits) {
+			var that = this;
+			_.each(commits, function(commit) {
+				link = that.links[commit.author + ',' + commit.owner + '/' + commit.repo];
+				if (link.weight > 0) {
+					link.weight -= 1;
+					link.width = that.linkScale(link.weight);
+				}
+
+				node = that.nodes[commit.author];
+				if (node.show > 0) node.show -= 1;
+
+				node = that.nodes[commit.owner + '/' + commit.repo];
+				if (node.show > 0) node.show -= 1;
+			});
+		},
+		updateScroll: function(commits) {
+			this.graphVisualization.showLabels(commits);
+			this.graphVisualization.update();
 		}
 	});
 });

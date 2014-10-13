@@ -176,6 +176,9 @@ define([
 				.data(this.commits)
 				.enter().append('circle')
 				.call(this.circleVisualization);
+		},
+		updateScroll: function(commits) {
+			this.circleVisualization.highlight(commits);
 		}
 	});
 });

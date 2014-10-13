@@ -20,7 +20,7 @@ define([
 		circle
 			.attr('r', function(d) {return d.radius})
 			.attr('fill', '#fff');
-		circle.filter(function(d) {return d.y === data[0].y})
+		circle.filter(function(d) {return d.x === data[0].x})
 			.attr('r', 8)
 			.attr('fill', function(d) {return app.d3Colors(d.author)});
 
