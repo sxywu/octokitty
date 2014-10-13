@@ -173,7 +173,8 @@ left hand side
 }
 
 .timeline {
-	height: 10000px;
+	width: 10000px;
+	height: 100%;
 }
 
 .loading {

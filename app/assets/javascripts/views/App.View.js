@@ -23,7 +23,7 @@ define([
 			this.graph = d3.select('svg.graph');
 
 			this.timelineView = new TimelineView({
-				el: this.timeline
+				el: this.timeline.node()
 			});
 
 			this.graphVisualization = new GraphVisualization();
@@ -33,6 +33,7 @@ define([
 			$('.inputUser').keydown(_.bind(this.keydown, this));
 			$('.search').click(_.bind(this.search, this));
 
+			this.showSomething(['timelineWrapper', 'summary', 'weekWrapper']);
 			this.users = $.parseJSON(localStorage['users'])
 			this.repos = $.parseJSON(localStorage['repos'])
 			this.commits = $.parseJSON(localStorage['commits'])
@@ -199,68 +200,68 @@ define([
 		calculate the positions of each commit, where x-axis is contributor
 		and y-axis is time.  may flip the axis later on.
 		*/
-		calculateTimeline: function() {
-			// first need scale for time
-			var minDate = _.first(this.commits).dateObj,
-				maxDate = _.last(this.commits).dateObj,
-				svgHeight = $('.timeline').height(),
-				timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
-					.range([app.padding.top, svgHeight - app.padding.bottom]);
+		// calculateTimeline: function() {
+		// 	// first need scale for time
+		// 	var minDate = _.first(this.commits).dateObj,
+		// 		maxDate = _.last(this.commits).dateObj,
+		// 		svgHeight = $('.timeline').height(),
+		// 		timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
+		// 			.range([app.padding.top, svgHeight - app.padding.bottom]);
 
 
-			// set up scale for contributors, sorted by their repos for the x-axis
-			var repos = [],
-				contributorObj,
-				// reposByContributor,
-				that = this;
-			_.each(this.contributors, function(commits, contributor) {
-				contributorObj = {
-					owner: contributor,
-					repos: []
-				}
-				_.each(that.repos, function(repo) {
-					if (repo.owner === contributor) {
-						contributorObj.repos.push(repo);
-					}
-				});
-				repos.push(contributorObj);
-			});
-			var popularitySum,
-				matchedRepo;
-			this.sortedRepos = [];
-			_.chain(repos).sortBy(function(contributorObj) {
-				popularitySum = 0;
-				contributorObj.repos = _.sortBy(contributorObj.repos, function(repo) {
-					popularitySum += repo.watches + repo.stars + repo.forks;
-					return -repo.watches + repo.stars + repo.forks;
-				});
-				return -popularitySum;
-			}).each(function(contributorObj) {
-				that.sortedRepos.push(contributorObj.owner);
-				_.each(contributorObj.repos, function(repo) {
-					that.sortedRepos.push(repo.owner + '/' + repo.name);
-				})
-			});
-			var range = _.chain(this.sortedRepos.length).range()
-					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
-				repoScale = this.repoScale = d3.scale.ordinal().domain(this.sortedRepos).range(range);
+		// 	// set up scale for contributors, sorted by their repos for the x-axis
+		// 	var repos = [],
+		// 		contributorObj,
+		// 		// reposByContributor,
+		// 		that = this;
+		// 	_.each(this.contributors, function(commits, contributor) {
+		// 		contributorObj = {
+		// 			owner: contributor,
+		// 			repos: []
+		// 		}
+		// 		_.each(that.repos, function(repo) {
+		// 			if (repo.owner === contributor) {
+		// 				contributorObj.repos.push(repo);
+		// 			}
+		// 		});
+		// 		repos.push(contributorObj);
+		// 	});
+		// 	var popularitySum,
+		// 		matchedRepo;
+		// 	this.sortedRepos = [];
+		// 	_.chain(repos).sortBy(function(contributorObj) {
+		// 		popularitySum = 0;
+		// 		contributorObj.repos = _.sortBy(contributorObj.repos, function(repo) {
+		// 			popularitySum += repo.watches + repo.stars + repo.forks;
+		// 			return -repo.watches + repo.stars + repo.forks;
+		// 		});
+		// 		return -popularitySum;
+		// 	}).each(function(contributorObj) {
+		// 		that.sortedRepos.push(contributorObj.owner);
+		// 		_.each(contributorObj.repos, function(repo) {
+		// 			that.sortedRepos.push(repo.owner + '/' + repo.name);
+		// 		})
+		// 	});
+		// 	var range = _.chain(this.sortedRepos.length).range()
+		// 			.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
+		// 		repoScale = this.repoScale = d3.scale.ordinal().domain(this.sortedRepos).range(range);
 
-			// finally, a scale for the size of each circle
-			var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
-				minTime = _.min(allTimes, function(time) {return time}),
-				maxTime = _.max(allTimes, function(time) {return time}),
-				commitScale = d3.scale.linear().domain([minTime, maxTime]).range([3, 9]);
-			// set the x and y position of each commit.
-			// this is what we've been leading up to ladies and gents
-			_.each(this.contributors, function(commits, contributor) {
-				_.each(commits, function(commit) {
-					commit.authorX = repoScale(commit.author);
-					commit.x = repoScale(commit.owner + '/' + commit.repo);
-					commit.y = timeScale(commit.dateObj);
-					commit.radius = commitScale(commit.times.length);
-				})
-			});
-		},
+		// 	// finally, a scale for the size of each circle
+		// 	var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
+		// 		minTime = _.min(allTimes, function(time) {return time}),
+		// 		maxTime = _.max(allTimes, function(time) {return time}),
+		// 		commitScale = d3.scale.linear().domain([minTime, maxTime]).range([3, 9]);
+		// 	// set the x and y position of each commit.
+		// 	// this is what we've been leading up to ladies and gents
+		// 	_.each(this.contributors, function(commits, contributor) {
+		// 		_.each(commits, function(commit) {
+		// 			commit.authorX = repoScale(commit.author);
+		// 			commit.x = repoScale(commit.owner + '/' + commit.repo);
+		// 			commit.y = timeScale(commit.dateObj);
+		// 			commit.radius = commitScale(commit.times.length);
+		// 		})
+		// 	});
+		// },
 		calculateGraph: function() {
 			this.nodes = {};
 			this.links = {};
