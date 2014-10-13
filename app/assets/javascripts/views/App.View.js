@@ -124,24 +124,12 @@ define([
 				.flatten().sortBy(function(commit) {return commit.x})
 				.groupBy(function(commit) {return commit.x}).values().value();
 
-			// if (_.values(this.contributors).length) {
-			// 	// update loading indicator
-			// 	$('.progress-bar').css('width', '75%');
-
-			// 	this.formatData();
-			// 	this.calculateTimeline();
-			// 	this.calculateGraph();
-
-			// 	$('.progress-bar').css('width', '100%');
 			// 	this.showSomething(['timelineWrapper', 'summary', 'weekWrapper']);
 			// 	this.enableSomething(['inputUser', 'submitUser']);
 
-			// 	// empty everything bc i'm lazy
-			// 	$(this.graph.node()).empty();
 
-
-				this.renderBackground();
-				this.renderTimelineLabels();
+			this.renderBackground();
+			this.renderTimelineLabels();
 
 			this.lastIndex = 0;
 			this.lastPos = 0;
@@ -156,155 +144,6 @@ define([
 			// 	// give "sorry you don't really have contributors for your top repos *sadface*" error message
 			// }
 		},
-		formatData: function() {
-			// var that = this,
-			// 	processedCommits,
-			// 	interval = d3.time.week;
-			// this.commits = [];
-			// // post processing: flatten the contributors' commit array, then sort them by date
-			// _.each(this.contributors, function(commits, contributor) {
-			// 	processedCommits = {};
-			// 	_.chain(commits)
-			// 		.flatten()
-			// 		.each(function(commit) {
-			// 			// round date to the nearest week
-			// 			var date = interval(new Date(commit.date.split('T')[0]));
-			// 			var identifier = date + ':' + commit.owner + '/' + commit.repo;
-			// 			if (processedCommits[identifier]) {
-			// 				processedCommits[identifier].times.push({
-			// 					date: new Date(commit.date),
-			// 					url: commit.url,
-			// 					sha: commit.sha});
-			// 			} else {
-			// 				commit.times = [{
-			// 					date: new Date(commit.date),
-			// 					url: commit.url,
-			// 					sha: commit.sha}];
-			// 				commit.date = date.toISOString();
-			// 				delete commit.url;
-			// 				delete commit.sha;
-			// 				processedCommits[identifier] = commit;
-			// 			}
-			// 		});
-			// 	processedCommits = _.sortBy(processedCommits, function(commit) {
-			// 		that.commits.push(commit);
-			// 		commit.dateObj = new Date(commit.date);
-			// 		return commit.dateObj;
-			// 	});
-			// 	that.contributors[contributor] = processedCommits;
-			// });
-
-			// // sort this.commits
-			// this.commits = _.sortBy(this.commits, function(commit) {return commit.dateObj});
-		},
-		/*
-		calculate the positions of each commit, where x-axis is contributor
-		and y-axis is time.  may flip the axis later on.
-		*/
-		// calculateTimeline: function() {
-		// 	// first need scale for time
-		// 	var minDate = _.first(this.commits).dateObj,
-		// 		maxDate = _.last(this.commits).dateObj,
-		// 		svgHeight = $('.timeline').height(),
-		// 		timeScale = this.timeScale = d3.scale.linear().domain([minDate, maxDate])
-		// 			.range([app.padding.top, svgHeight - app.padding.bottom]);
-
-
-		// 	// set up scale for contributors, sorted by their repos for the x-axis
-		// 	var repos = [],
-		// 		contributorObj,
-		// 		// reposByContributor,
-		// 		that = this;
-		// 	_.each(this.contributors, function(commits, contributor) {
-		// 		contributorObj = {
-		// 			owner: contributor,
-		// 			repos: []
-		// 		}
-		// 		_.each(that.repos, function(repo) {
-		// 			if (repo.owner === contributor) {
-		// 				contributorObj.repos.push(repo);
-		// 			}
-		// 		});
-		// 		repos.push(contributorObj);
-		// 	});
-		// 	var popularitySum,
-		// 		matchedRepo;
-		// 	this.sortedRepos = [];
-		// 	_.chain(repos).sortBy(function(contributorObj) {
-		// 		popularitySum = 0;
-		// 		contributorObj.repos = _.sortBy(contributorObj.repos, function(repo) {
-		// 			popularitySum += repo.watches + repo.stars + repo.forks;
-		// 			return -repo.watches + repo.stars + repo.forks;
-		// 		});
-		// 		return -popularitySum;
-		// 	}).each(function(contributorObj) {
-		// 		that.sortedRepos.push(contributorObj.owner);
-		// 		_.each(contributorObj.repos, function(repo) {
-		// 			that.sortedRepos.push(repo.owner + '/' + repo.name);
-		// 		})
-		// 	});
-		// 	var range = _.chain(this.sortedRepos.length).range()
-		// 			.map(function(i) {return i * app.contributorPadding + app.padding.left}).value(),
-		// 		repoScale = this.repoScale = d3.scale.ordinal().domain(this.sortedRepos).range(range);
-
-		// 	// finally, a scale for the size of each circle
-		// 	var allTimes = _.map(this.commits, function(commit) {return commit.times.length}),
-		// 		minTime = _.min(allTimes, function(time) {return time}),
-		// 		maxTime = _.max(allTimes, function(time) {return time}),
-		// 		commitScale = d3.scale.linear().domain([minTime, maxTime]).range([3, 9]);
-		// 	// set the x and y position of each commit.
-		// 	// this is what we've been leading up to ladies and gents
-		// 	_.each(this.contributors, function(commits, contributor) {
-		// 		_.each(commits, function(commit) {
-		// 			commit.authorX = repoScale(commit.author);
-		// 			commit.x = repoScale(commit.owner + '/' + commit.repo);
-		// 			commit.y = timeScale(commit.dateObj);
-		// 			commit.radius = commitScale(commit.times.length);
-		// 		})
-		// 	});
-		// },
-		// calculateGraph: function() {
-		// 	this.nodes = {};
-		// 	this.links = {};
-		// 	var source, target,
-		// 		owner, repo,
-		// 		that = this;
-		// 	_.each(this.sortedRepos, function(ownerRepo) {
-		// 		owner = ownerRepo.split('/')[0];
-		// 		repo = ownerRepo.split('/')[1];
-		// 		that.nodes[ownerRepo] = {
-		// 			owner: owner,
-		// 			repo: repo,
-		// 			show: 0,
-		// 			total: 0
-		// 		}
-		// 	});
-		// 	_.each(this.repos, function(repo) {
-		// 		// contributor is the source, repo is the target
-		// 		target = that.nodes[repo.owner + '/' + repo.name];
-		// 		_.each(repo.contributors, function(contributor) {
-		// 			source = that.nodes[contributor];
-		// 			that.links[contributor + ',' + repo.owner + '/' + repo.name] = {
-		// 				source: source,
-		// 				target: target,
-		// 				weight: 0,
-		// 				width: 0,
-		// 				total: 0
-		// 			};
-		// 		});
-		// 	});
-
-		// 	_.each(this.commits, function(commit) {
-		// 		that.nodes[commit.author].total += 1;
-		// 		that.nodes[commit.owner + '/' + commit.repo].total += 1;
-		// 		that.links[commit.author + ',' + commit.owner + '/' + commit.repo].total += 1;
-		// 	});
-		// 	var maxWeight = _.max(this.links, function(link) {return link.total}).total;
-		// 	this.linkScale = d3.scale.linear().domain([1, maxWeight]).range([1, 8]);
-
-		// 	this.commitsByWeek = _.chain(this.commits).groupBy(function(commit) {return commit.y}).values().value();
-
-		// },
 		// draw the background here bc i'm too lazy to put it in another file
 		renderBackground: function() {
 			var that = this,
