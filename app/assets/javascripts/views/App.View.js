@@ -40,7 +40,6 @@ define([
 			this.render();
 			// var windowScroll = _.debounce(_.bind(this.windowScroll, this), 0);
 			// $(window).scroll(windowScroll);
-			// $(window).scroll(_.bind(this.scrollLabel, this));
 		},
 		search: function() {
 			if ($('.inputUser').hasClass('hide')) {
@@ -136,6 +135,8 @@ define([
 				this.renderTimelineLabels();
 
 
+
+			$('.leftPanel').scroll(_.bind(this.scrollLabel, this));
 			// 	this.lastIndex = 0;
 			// 	this.lastPos = 0;
 			// 	this.windowScroll();
@@ -316,7 +317,7 @@ define([
 					backgrounds[owner] = background
 				} else {
 					background = backgrounds[owner];
-					background.attr('width', parseInt(background.attr('width')) + app.contributorPadding);
+					background.attr('height', parseInt(background.attr('height')) + app.contributorPadding);
 				}
 			});
 
@@ -417,7 +418,7 @@ define([
 		},
 		scrollLabel: function() {
 			if (!this.timelineLabels) return;
-			this.timelineLabels.attr('transform', 'translate(0,' + $(window).scrollTop() + ')');
+			this.timelineLabels.attr('transform', 'translate(' + $('.leftPanel').scrollLeft() + ',0)');
 		},
 		showSomething: function(somethings) {
 			somethings = !_.isArray(somethings) ? [somethings] : somethings;
