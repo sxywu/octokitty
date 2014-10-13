@@ -75,10 +75,10 @@ define([
 			});
 		},
 		calculateY: function() {
-			var height = this.$el.height(),
+			var height = this.$el.height() - app.padding.top - app.padding.bottom,
 				length = Math.floor(height / app.contributorPadding),
 				range = _.chain(length).range()
-					.map(function(i) {return i * app.contributorPadding + app.padding.left}).value();
+					.map(function(i) {return i * app.contributorPadding + app.padding.top}).value();
 			this.contributorScale.range(range);
 
 			this.contributorsAndRepos = [];
@@ -102,26 +102,49 @@ define([
 		},
 		calculateX: function() {
 			this.timeScale
-				.range([0, this.$el.width()]);
+				.range([app.padding.left, this.$el.width() - app.padding.right]);
 
 			var that = this,
 				minDate = new Date(),
-				repos, commits;
+				interval = d3.time.week,
+				date, identifier,
+				repos, commits, processedCommits;
 			this.lineData = [];
 			_.each(this.contributors, function(contributor) {
 				if (!_.contains(that.contributorsAndRepos, contributor)) return; // wow so not performant
 				repos = that.commitsByContributors[contributor];
 				commits = [];
+				processedCommits = {};
 				_.each(repos, function(commit, repoName) {
 					if (_.contains(that.contributorsAndRepos, repoName)) {
 						commits.push(commit)
 					}
 				});
-				commits = _.chain(commits).flatten()
-					.sortBy(function(commit) {
-						commit.dateObj = new Date(commit.date);
-						return commit.dateObj;
-					}).value()
+				_.chain(commits).flatten()
+					.each(function(commit) {
+						date = interval(new Date(commit.date.split('T')[0]));
+						identifier = date + ':' + commit.owner + '/' + commit.repo;
+						if (processedCommits[identifier]) {
+							processedCommits[identifier].times.push({
+								date: new Date(commit.date),
+								url: commit.url,
+								sha: commit.sha});
+						} else {
+							commit.times = [{
+								date: new Date(commit.date),
+								url: commit.url,
+								sha: commit.sha}];
+							commit.date = date.toISOString();
+							delete commit.url;
+							delete commit.sha;
+							processedCommits[identifier] = commit;
+						}
+					});
+
+				commits = _.sortBy(processedCommits, function(commit) {
+					commit.dateObj = new Date(commit.date);
+					return commit.dateObj;
+				});
 
 				that.lineData.push(commits);
 				minDate = (minDate < commits[0].dateObj ? minDate : commits[0].dateObj);
