@@ -11,7 +11,7 @@ define([
 			.classed('commit', true)
 			.attr('cx', function(d) {return d.x})
 			.attr('cy', function(d) {return d.y})
-			.attr('r', function(d) {return d.radius || 4})
+			.attr('r', function(d) {return d.radius})
 			.attr('fill', '#fff')
 			.attr('stroke', function(d) {return app.d3Colors(d.author)});
 	}

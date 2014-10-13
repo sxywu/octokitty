@@ -22,6 +22,7 @@ define([
 
 			this.contributorScale = d3.scale.ordinal();
 			this.timeScale = d3.scale.linear();
+			this.commitScale = d3.scale.linear().range([2, 9]); // commit radius
 		},
 		processData: function(users, repos, commits) {
 			this.contributors = _.chain(repos)
@@ -64,13 +65,19 @@ define([
 			this.calculateY();
 			this.calculateX();
 
-			var that = this;
+			var that = this,
+				allTimes = _.chain(this.lineData)
+					.flatten()
+					.sortBy(function(commit) {return commit.times.length}).value();
+
+			this.commitScale.domain([_.first(allTimes).times.length, _.last(allTimes).times.length]);
 			// finally, let's give them x & y positions
 			_.each(this.lineData, function(line) {
 				_.each(line, function(commit) {
 					commit.x = that.timeScale(commit.dateObj);
 					commit.y = that.contributorScale(commit.owner + '/' + commit.repo);
 					commit.authorY = that.contributorScale(commit.author);
+					commit.radius = that.commitScale(commit.times.length);
 				});
 			});
 		},
@@ -161,10 +168,14 @@ define([
 				.enter().append('path')
 				.call(this.lineVisualization);	
 
+			var circles = _.chain(this.lineData)
+				.flatten().sortBy(function(commit) {
+					return -commit.radius;
+				}).value();
 			this.d3El.selectAll('circle')
-				.data(_.flatten(this.lineData))
+				.data(circles)
 				.enter().append('circle')
-				.call(this.circleVisualization);	
+				.call(this.circleVisualization);
 		}
 	});
 });
